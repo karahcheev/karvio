@@ -127,6 +127,3 @@ Use names that remain meaningful in reports and audit history:
 | Test run | Scope + build or cycle | `Sprint 24 Regression – RC2` |
 | Milestone | Release or delivery unit | `2026.05 Release` |
 | Environment | Target + platform | `Staging EU – Chrome Windows` |
-
-!!! tip
-    Avoid putting temporary details only in names. Use fields such as **Build**, **Environment**, **Milestone**, and **Tags** so filtering and reports continue to work.

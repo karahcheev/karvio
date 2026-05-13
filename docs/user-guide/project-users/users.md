@@ -137,9 +137,6 @@ Removing a member does not delete their historical contributions (test results, 
 | Product manager reviewing release readiness | Viewer |
 | CI automation account | Dedicated user with only required project access |
 
-!!! tip
-    Create named users for integrations and automation instead of sharing a human account. This keeps audit logs clear.
-
 ---
 
 ## API Keys

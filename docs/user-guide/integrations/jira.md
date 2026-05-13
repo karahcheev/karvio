@@ -36,9 +36,6 @@ Connections are managed by system administrators.
 | **Username / Email** | The Jira account used for API access |
 | **API Token** | A Jira API token (see note below) |
 
-!!! tip "Generating a Jira API Token"
-    In Jira Cloud, go to **Account Settings** → **Security** → **API Tokens** and create a new token. For Jira Server/Data Center, use your password or a personal access token.
-
 4. Click **Save and Test Connection**.
 
 If the connection is successful, you see a confirmation message. If it fails, check the URL and credentials.
