@@ -1,0 +1,162 @@
+/* Karvio light theme — matched to product design tokens */
+
+/* In MkDocs Material with primary: custom:
+   --md-primary-fg-color  = header/navbar background colour
+   --md-primary-bg-color  = text/icons ON that background
+*/
+:root {
+  /* Header bar: white surface with dark text — matches product top nav */
+  --md-primary-fg-color:        #FFFFFF;
+  --md-primary-fg-color--light: #F1F5F9;
+  --md-primary-fg-color--dark:  #E2E8F0;
+  --md-primary-bg-color:        #1A202C;
+  --md-primary-bg-color--light: rgba(26, 32, 44, 0.7);
+
+  /* Accent: product action blue — links, active tabs, search highlight */
+  --md-accent-fg-color:              #3182CE;
+  --md-accent-fg-color--transparent: rgba(49, 130, 206, 0.1);
+  --md-accent-bg-color:              #FFFFFF;
+
+  /* Page background & text */
+  --md-default-bg-color:            #FFFFFF;
+  --md-default-fg-color:            #1A202C;
+  --md-default-fg-color--light:     rgba(26, 32, 44, 0.54);
+  --md-default-fg-color--lighter:   rgba(26, 32, 44, 0.32);
+  --md-default-fg-color--lightest:  rgba(26, 32, 44, 0.12);
+
+  /* Code blocks */
+  --md-code-bg-color:    #EDF2F7;
+  --md-code-fg-color:    #2D3748;
+  --md-code-hl-color:    rgba(49, 130, 206, 0.15);
+
+  /* Links */
+  --md-typeset-a-color:  #3182CE;
+
+  /* Footer */
+  --md-footer-bg-color:       #2D3748;
+  --md-footer-bg-color--dark: #1A202C;
+  --md-footer-fg-color:       rgba(255, 255, 255, 0.87);
+  --md-footer-fg-color--light: rgba(255, 255, 255, 0.54);
+  --md-footer-fg-color--lighter: rgba(255, 255, 255, 0.32);
+}
+
+/* Header border to separate from page content */
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+/* Make in-page cross-reference links visible before hover. */
+.md-typeset a:not(.md-button):not(.headerlink):not(.md-tag) {
+  color: #2563AB;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.md-typeset a:not(.md-button):not(.headerlink):not(.md-tag):visited {
+  color: #2563AB;
+}
+
+.md-typeset a:not(.md-button):not(.headerlink):not(.md-tag):hover,
+.md-typeset a:not(.md-button):not(.headerlink):not(.md-tag):focus-visible {
+  color: #1D4E89;
+  text-decoration-thickness: 0.12em;
+}
+
+/* Active nav item: product accent blue */
+.md-nav__link--active,
+.md-nav__item--active > .md-nav__link {
+  color: #3182CE;
+  font-weight: 500;
+}
+
+/* Keep clickable section index links readable on the white sidebar surface. */
+.md-nav__container,
+.md-nav__item--active > .md-nav__link,
+.md-nav__item--nested > .md-nav__link,
+.md-nav__item--section > .md-nav__link {
+  background-color: transparent !important;
+}
+
+.md-nav__container > .md-nav__link,
+.md-nav__item--active > .md-nav__link,
+.md-nav__item--section > .md-nav__link--active,
+.md-nav__item--section > .md-nav__link:hover {
+  color: #1A202C !important;
+}
+
+.md-nav__container > .md-nav__link--active,
+.md-nav__container > label.md-nav__link--active,
+.md-nav__item--section > .md-nav__link--active {
+  color: #3182CE !important;
+}
+
+/* Separate the page table of contents from the white page background. */
+.md-sidebar--secondary .md-sidebar__inner {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.md-sidebar--secondary .md-nav__title {
+  color: #1A202C;
+  font-weight: 600;
+}
+
+.md-sidebar--secondary .md-nav__link {
+  color: rgba(26, 32, 44, 0.7);
+}
+
+.md-sidebar--secondary .md-nav__link--active,
+.md-sidebar--secondary .md-nav__link:hover {
+  color: #3182CE;
+}
+
+/* Admonition colours mapped to product intent tokens */
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  border-color: #3182CE;
+}
+.md-typeset .note > .admonition-title,
+.md-typeset .note > summary {
+  background-color: rgba(49, 130, 206, 0.1);
+}
+
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: #E2A226;
+}
+.md-typeset .warning > .admonition-title,
+.md-typeset .warning > summary {
+  background-color: rgba(226, 162, 38, 0.1);
+}
+
+.md-typeset .admonition.danger,
+.md-typeset details.danger {
+  border-color: #DC2626;
+}
+.md-typeset .danger > .admonition-title,
+.md-typeset .danger > summary {
+  background-color: rgba(220, 38, 38, 0.1);
+}
+
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #1EA672;
+}
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background-color: rgba(30, 166, 114, 0.1);
+}
+
+/* Documentation authoring marker for missing product screenshots. */
+.md-typeset .admonition.screenshot,
+.md-typeset details.screenshot {
+  border-color: #805AD5;
+}
+.md-typeset .screenshot > .admonition-title,
+.md-typeset .screenshot > summary {
+  background-color: rgba(128, 90, 213, 0.1);
+}

@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: tms-postgres-dev
+    env_file:
+      - ./config
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tms-backend-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./config
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/status').getcode()==200 else 1)\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  procrastinate-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tms-procrastinate-worker-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    env_file:
+      - ./config
+    command: python -m procrastinate --app=app.core.queue.queue_app worker
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: tms-frontend-dev
+    depends_on:
+      - backend
+    env_file:
+      - ./config
+    # Run as root to avoid EPERM with volume mounts on macOS
+    user: "0:0"
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    ports:
+      - "5173:5173"
+    volumes:
+      # :delegated can help with permission sync on macOS Docker Desktop
+      - ./ui:/app:delegated
+      - ui_node_modules:/app/node_modules
+
+volumes:
+  postgres_data_dev:
+  ui_node_modules:

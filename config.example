@@ -1,0 +1,119 @@
+# Copy to `config` and adjust. Used by docker-compose (backend, worker, postgres, frontend)
+# and by local `uvicorn` / Alembic via backend Settings (env_file: config, .env).
+
+# -----------------------------------------------------------------------------
+# Application
+# -----------------------------------------------------------------------------
+APP_NAME=Qarvio API
+APP_VERSION=1.0.0
+API_PREFIX=/api/v1
+APP_BASE_URL=http://localhost:5173
+
+LOG_LEVEL=INFO
+LOG_JSON=true
+
+METRICS_ENABLED=true
+METRICS_PATH=/metrics
+
+STATUS_QUEUE_BACKLOG_WARN=100
+STATUS_QUEUE_BACKLOG_FAIL=1000
+STATUS_PROCESSING_STALE_SECONDS=300
+STATUS_PENDING_STALE_SECONDS=300
+
+# -----------------------------------------------------------------------------
+# PostgreSQL (image env + connection string for the app)
+# -----------------------------------------------------------------------------
+POSTGRES_DB=tms
+POSTGRES_USER=tms
+POSTGRES_PASSWORD=CHANGE_ME_STRONG_DB_PASSWORD
+
+# Docker Compose: host is the service name `postgres`. Local backend on host: use localhost.
+DATABASE_URL=postgresql+psycopg://tms:CHANGE_ME_STRONG_DB_PASSWORD@postgres:5432/tms
+
+# -----------------------------------------------------------------------------
+# HTTP / CORS
+# -----------------------------------------------------------------------------
+# Comma-separated origins. Dev: http://localhost:5173 — Production: your real HTTPS origins.
+CORS_ORIGINS=http://localhost:5173
+
+# -----------------------------------------------------------------------------
+# Security (change before any shared or public deployment)
+# -----------------------------------------------------------------------------
+ADMIN_PASSWORD=CHANGE_ME_STRONG_ADMIN_PASSWORD
+
+# 64+ random bytes as base64 or hex. Example: openssl rand -base64 64
+AUTH_SECRET=CHANGE_ME_LONG_RANDOM_SECRET
+
+# JWT lifetime in seconds (default in code: 8 hours).
+ACCESS_TOKEN_TTL_SECONDS=28800
+
+# -----------------------------------------------------------------------------
+# Session cookie (httpOnly)
+# -----------------------------------------------------------------------------
+SESSION_COOKIE_NAME=tms_session
+SESSION_COOKIE_SECURE=true
+SESSION_COOKIE_SAME_SITE=lax
+
+# -----------------------------------------------------------------------------
+# Attachments and performance artifacts
+# -----------------------------------------------------------------------------
+ATTACHMENT_STORAGE_DRIVER=localstorage
+ATTACHMENT_LOCAL_ROOT=/app/data/attachments
+PERFORMANCE_ARTIFACT_ROOT=/app/data/performance_artifacts
+
+# Paths above match backend container layout. For local runs without Docker, e.g.:
+# ATTACHMENT_LOCAL_ROOT=./data/attachments
+# PERFORMANCE_ARTIFACT_ROOT=./data/performance_artifacts
+
+# -----------------------------------------------------------------------------
+# Background jobs (procrastinate over PostgreSQL)
+# -----------------------------------------------------------------------------
+# Procrastinate uses DATABASE_URL — no extra connection string is required.
+# Set to true only inside the test suite to swap in the in-memory connector.
+PROCRASTINATE_IN_MEMORY=false
+
+# -----------------------------------------------------------------------------
+# Bootstrap
+# -----------------------------------------------------------------------------
+# If true: create default project and admin on API startup. Prefer false in production
+# and run `python -m scripts.bootstrap` from the backend image when needed.
+BOOTSTRAP_ENABLED=false
+
+# -----------------------------------------------------------------------------
+# Audit queue
+# -----------------------------------------------------------------------------
+AUDIT_RETENTION_DAYS=365
+AUDIT_QUEUE_MAX_ATTEMPTS=5
+AUDIT_QUEUE_RETRY_MAX_SECONDS=300
+
+# -----------------------------------------------------------------------------
+# Jira defaults (API token and site are configured in the app / DB; these tune HTTP client)
+# -----------------------------------------------------------------------------
+JIRA_API_BASE_URL=https://api.atlassian.com
+JIRA_HTTP_TIMEOUT_SECONDS=20
+JIRA_HTTP_MAX_RETRIES=4
+JIRA_SYNC_DEFAULT_INTERVAL_SECONDS=300
+# Cron expression that drives the procrastinate periodic Jira refresh task.
+JIRA_SYNC_CRON=*/5 * * * *
+
+# -----------------------------------------------------------------------------
+# AI test case assistant
+# -----------------------------------------------------------------------------
+# Optional global fallback. Project managers can configure AI per project in Settings -> AI.
+# LLM calls are server-side only; never expose AI_API_KEY to frontend code.
+AI_TEST_CASE_ASSISTANT_ENABLED=false
+AI_PROVIDER=openai
+AI_MODEL=gpt-4o-mini
+AI_API_KEY=
+AI_TIMEOUT_MS=30000
+AI_HTTP_MAX_RETRIES=2
+AI_DUPLICATE_HIGH_THRESHOLD=0.88
+AI_DUPLICATE_MEDIUM_THRESHOLD=0.72
+
+# -----------------------------------------------------------------------------
+# Frontend (Vite; consumed at build/dev time from the same `config` in Compose)
+# -----------------------------------------------------------------------------
+# Browser-reachable API. Dev: full URL to backend. Production behind reverse proxy: often /api/v1
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+# Optional frontend build-time hint only. Project-aware server status remains authoritative.
+VITE_AI_TEST_CASE_ASSISTANT_ENABLED=false

@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    env_file:
+      - ./config.prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./config.prod
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    expose:
+      - "8000"
+    volumes:
+      - attachments_data:/app/data/attachments
+      - performance_artifacts_data:/app/data/performance_artifacts
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/status').getcode()==200 else 1)\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - internal
+
+  procrastinate-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    env_file:
+      - ./config.prod
+    command: python -m procrastinate --app=app.core.queue.queue_app worker
+    volumes:
+      - performance_artifacts_data:/app/data/performance_artifacts
+    networks:
+      - internal
+
+  frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+  attachments_data:
+  performance_artifacts_data:
+
+networks:
+  internal:
+    driver: bridge

@@ -1,0 +1,528 @@
+@custom-variant dark (&:is(.dark *));
+
+/* ================================================================
+   Minimal theme system
+   - Small number of source tokens
+   - Derived semantic tokens from core only
+   ================================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* Layout / typography */
+  --radius: 10px;
+  --font-size: 16px;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+
+  /* Surfaces */
+  --bg: #F7FAFC;
+  --surface: #FFFFFF;
+  --surface-muted: #F1F5F9;
+  --surface-strong: #E2E8F0;
+
+  /* Text */
+  --text: #1A202C;
+  --text-muted: #4A5568;
+  --text-on-fill: #FFFFFF;
+
+  /* Borders / focus */
+  --border: #E2E8F0;
+  --border-strong: #CBD5E0;
+  --focus: #3182CE;
+  --focus-soft: color-mix(in oklab, #3182CE 24%, #F7FAFC);
+
+  /* Brand / intents */
+  --primary: #2D3748;
+  --accent-action: #3182CE;
+  --accent-orange: #3182CE;
+  --accent-blue: #3182CE;
+  --accent-graphite: #2D3748;
+  --success: #1EA672;
+  --warning: #E2A226;
+  --danger: #B84545;
+  --info: #3182CE;
+  --neutral: #4A5568;
+
+  /* Fixed status-only colors */
+  --error: #7E5AA6;
+  --xfailed: #4A5568;
+  --xpassed: #3182CE;
+
+  /* Brand marks */
+  --brand-slack-magenta: #e01e5a;
+  --brand-slack-cyan: #36c5f0;
+  --brand-slack-green: #2eb67d;
+  --brand-slack-yellow: #ecb22e;
+  --brand-mattermost-bg: #1f3a56;
+  --brand-mattermost-mark: #ffffff;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --surface-muted: #243247;
+  --surface-strong: #334155;
+
+  /* Text */
+  --text: #E2E8F0;
+  --text-muted: #94A3B8;
+  --text-on-fill: #0F172A;
+
+  /* Borders / focus */
+  --border: #334155;
+  --border-strong: #475569;
+  --focus: #63B3ED;
+  --focus-soft: color-mix(in oklab, #63B3ED 34%, #1E293B);
+
+  /* Brand / intents */
+  --primary: #E2E8F0;
+  --accent-action: #63B3ED;
+  --accent-orange: #63B3ED;
+  --accent-blue: #63B3ED;
+  --accent-graphite: #E2E8F0;
+  --success: #2BB980;
+  --warning: #F0B23F;
+  --danger: #D98282;
+  --info: #63B3ED;
+  --neutral: #94A3B8;
+
+  /* Fixed status-only colors */
+  --error: #B69AD6;
+  --xfailed: #94A3B8;
+  --xpassed: #63B3ED;
+
+  /* Brand marks */
+  --brand-slack-magenta: #DE4A7E;
+  --brand-slack-cyan: #6CCEEA;
+  --brand-slack-green: #63B78D;
+  --brand-slack-yellow: #D7B15D;
+  --brand-mattermost-bg: #73809E;
+  --brand-mattermost-mark: #EDF2F7;
+}
+
+/* ================================================================
+   Derived tokens
+   Build all app semantics from the small core above.
+   ================================================================ */
+:root {
+  /* App primitives */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --foreground-muted: var(--text-muted);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+
+  --input: var(--border);
+  --input-background: var(--surface);
+  --input-readonly-background: color-mix(in oklab, var(--surface-muted) 80%, var(--surface));
+  --switch-background: color-mix(in oklab, var(--neutral) 40%, var(--surface));
+
+  --sidepanel-canvas: var(--bg);
+  --sidepanel-surface: var(--surface);
+  --sidepanel-muted: var(--surface-muted);
+  --sidepanel-border: var(--border);
+  --sidepanel-overlay: color-mix(in oklab, var(--text) 22%, transparent);
+
+  --table-canvas: var(--bg);
+  --table-surface: var(--surface);
+  --table-header-surface: var(--surface-muted);
+
+  --selection-bg: color-mix(in oklab, var(--primary) 18%, var(--surface));
+  --selection-text: var(--text);
+
+  --hover-bg: color-mix(in oklab, var(--text) 6%, var(--surface));
+  --active-bg: color-mix(in oklab, var(--text) 10%, var(--surface));
+
+  --highlight-bg-soft: var(--tone-primary-bg-soft);
+  --highlight-bg: var(--tone-primary-bg);
+  --highlight-bg-hover: var(--active-bg);
+  --highlight-border: var(--tone-primary-border);
+  --highlight-foreground: var(--tone-primary-text);
+  --highlight-strong: var(--primary);
+  --highlight-strong-foreground: var(--text-on-fill);
+
+  --ring: var(--focus);
+
+  /* Status primitives */
+  --status-passed: var(--success);
+  --status-failure: var(--danger);
+  --status-blocked: var(--warning);
+  --status-error: var(--error);
+  --status-skipped: var(--info);
+  --status-in-progress: var(--primary);
+  --status-default: var(--neutral);
+  --status-xfailed: var(--xfailed);
+  --status-xpassed: var(--xpassed);
+
+  /* Test run progress bar colors, synced with run item status tones */
+  --status-bar-untested: color-mix(in oklab, var(--neutral) 100%, var(--surface));
+  --status-bar-in-progress: var(--info);
+  --status-bar-passed: var(--success);
+  --status-bar-error: var(--error);
+  --status-bar-failure: var(--danger);
+  --status-bar-blocked: var(--warning);
+  --status-bar-skipped: color-mix(in oklab, var(--neutral) 62%, var(--surface));
+  --status-bar-xfailed: color-mix(in oklab, var(--neutral) 62%, var(--surface));
+  --status-bar-xpassed: var(--danger);
+
+  /* Charts */
+  --chart-pass-rate: var(--status-passed);
+  --chart-executed: var(--accent-action);
+  --chart-error: var(--status-error);
+  --chart-failure: var(--status-failure);
+  --chart-pie-default: var(--status-default);
+
+  /* Actions */
+  --action-primary-fill: var(--accent-action);
+  --action-primary-fill-hover: color-mix(in oklab, var(--accent-action) 86%, black);
+  --action-primary-foreground: var(--text-on-fill);
+  --action-primary-disabled-fill: color-mix(in oklab, var(--accent-action) 45%, var(--surface));
+  --action-primary-indicator: color-mix(in oklab, var(--accent-action) 68%, var(--surface));
+  --control-focus-ring: var(--focus);
+  --control-focus-ring-soft: var(--focus-soft);
+
+  --action-danger-fill: var(--danger);
+  --action-danger-fill-hover: color-mix(in oklab, var(--danger) 86%, black);
+  --action-danger-focus-ring: var(--danger);
+
+  /* Generic intent recipe */
+  --tone-neutral-bg: color-mix(in oklab, var(--neutral) 18%, var(--surface));
+  --tone-neutral-bg-soft: color-mix(in oklab, var(--neutral) 12%, var(--surface));
+  --tone-neutral-border: color-mix(in oklab, var(--neutral) 40%, var(--surface));
+  --tone-neutral-border-strong: color-mix(in oklab, var(--neutral) 56%, var(--surface));
+  --tone-neutral-text: color-mix(in oklab, var(--neutral) 90%, var(--text));
+
+  --tone-primary-bg: color-mix(in oklab, var(--primary) 14%, var(--surface));
+  --tone-primary-bg-soft: color-mix(in oklab, var(--primary) 8%, var(--surface));
+  --tone-primary-border: color-mix(in oklab, var(--primary) 34%, var(--surface));
+  --tone-primary-border-strong: color-mix(in oklab, var(--primary) 48%, var(--surface));
+  --tone-primary-text: color-mix(in oklab, var(--primary) 78%, var(--text));
+
+  --tone-success-bg: color-mix(in oklab, var(--success) 22%, var(--surface));
+  --tone-success-bg-soft: color-mix(in oklab, var(--success) 14%, var(--surface));
+  --tone-success-border: color-mix(in oklab, var(--success) 46%, var(--surface));
+  --tone-success-border-strong: color-mix(in oklab, var(--success) 62%, var(--surface));
+  --tone-success-text: color-mix(in oklab, var(--success) 88%, var(--text));
+
+  --tone-warning-bg: color-mix(in oklab, var(--warning) 24%, var(--surface));
+  --tone-warning-bg-soft: color-mix(in oklab, var(--warning) 15%, var(--surface));
+  --tone-warning-border: color-mix(in oklab, var(--warning) 48%, var(--surface));
+  --tone-warning-border-strong: color-mix(in oklab, var(--warning) 64%, var(--surface));
+  --tone-warning-text: color-mix(in oklab, var(--warning) 90%, var(--text));
+
+  --tone-danger-bg: color-mix(in oklab, var(--danger) 22%, var(--surface));
+  --tone-danger-bg-soft: color-mix(in oklab, var(--danger) 14%, var(--surface));
+  --tone-danger-border: color-mix(in oklab, var(--danger) 46%, var(--surface));
+  --tone-danger-border-strong: color-mix(in oklab, var(--danger) 62%, var(--surface));
+  --tone-danger-text: color-mix(in oklab, var(--danger) 88%, var(--text));
+
+  --tone-info-bg: color-mix(in oklab, var(--info) 22%, var(--surface));
+  --tone-info-bg-soft: color-mix(in oklab, var(--info) 14%, var(--surface));
+  --tone-info-border: color-mix(in oklab, var(--info) 46%, var(--surface));
+  --tone-info-border-strong: color-mix(in oklab, var(--info) 62%, var(--surface));
+  --tone-info-text: color-mix(in oklab, var(--info) 88%, var(--text));
+
+  --tone-error-bg: color-mix(in oklab, var(--error) 22%, var(--surface));
+  --tone-error-bg-soft: color-mix(in oklab, var(--error) 14%, var(--surface));
+  --tone-error-border: color-mix(in oklab, var(--error) 46%, var(--surface));
+  --tone-error-border-strong: color-mix(in oklab, var(--error) 62%, var(--surface));
+  --tone-error-text: color-mix(in oklab, var(--error) 90%, var(--text));
+
+  /* Sidebar */
+  --sidebar: var(--surface-muted);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--text-on-fill);
+  --sidebar-accent: color-mix(in oklab, var(--sidebar-foreground) 6%, var(--sidebar));
+  --sidebar-accent-foreground: var(--sidebar-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--focus);
+
+  /* Tags */
+  --tag-fill-bg: color-mix(in oklab, var(--surface) 92%, var(--accent-action) 8%);
+  --tag-fill-border: color-mix(in oklab, var(--accent-action) 32%, var(--border));
+  --tag-fill-foreground: var(--text);
+  --tag-outline-bg: color-mix(in oklab, var(--bg) 92%, var(--accent-action) 8%);
+  --tag-outline-border: color-mix(in oklab, var(--accent-action) 38%, var(--border));
+  --tag-outline-foreground: var(--text);
+  --tag-remove-foreground: var(--text-muted);
+  --tag-remove-hover-bg: color-mix(in oklab, var(--accent-action) 16%, var(--surface));
+  --tag-remove-hover-foreground: var(--text);
+  --tag-toggle-bg: color-mix(in oklab, var(--surface) 94%, var(--accent-action) 6%);
+  --tag-toggle-border: color-mix(in oklab, var(--accent-action) 34%, var(--border-strong));
+  --tag-toggle-foreground: var(--text);
+  --tag-toggle-hover-border: color-mix(in oklab, var(--accent-action) 62%, var(--surface));
+  --tag-empty-bg: color-mix(in oklab, var(--surface-muted) 90%, var(--accent-action) 10%);
+  --tag-empty-border: color-mix(in oklab, var(--accent-action) 28%, var(--border-strong));
+  --tag-empty-foreground: var(--text-muted);
+
+  /* Component semantic aliases */
+  --primary-foreground: var(--text-on-fill);
+  --secondary: var(--card);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--background);
+  --muted-foreground: var(--foreground-muted);
+  --accent: var(--card);
+  --accent-foreground: var(--foreground);
+  --destructive: var(--status-failure);
+  --destructive-foreground: var(--text-on-fill);
+}
+
+/* Dark mode overrides to keep tags/status tones readable. */
+.dark {
+  --sidepanel-overlay: color-mix(in oklab, #020617 68%, transparent);
+
+  /* Raw status colors for icons, charts, counters */
+  --status-passed: #34D399;
+  --status-failure: #D98282;
+  --status-blocked: #F6C453;
+  --status-error: #B69AD6;
+  --status-skipped: #7CC8FF;
+  --status-in-progress: #8FC7F5;
+  --status-default: #A5B4C7;
+  --status-bar-untested: color-mix(in oklab, var(--status-default) 84%, var(--surface));
+  --status-xfailed: #B6C2D3;
+  --status-xpassed: #8FD3FF;
+
+  /* Higher-contrast semantic tones for status badges/cards */
+  --tone-neutral-bg: color-mix(in oklab, var(--neutral) 24%, var(--surface));
+  --tone-neutral-bg-soft: color-mix(in oklab, var(--neutral) 16%, var(--surface));
+  --tone-neutral-border: color-mix(in oklab, var(--neutral) 50%, var(--surface));
+  --tone-neutral-border-strong: color-mix(in oklab, var(--neutral) 66%, var(--surface));
+  --tone-neutral-text: color-mix(in oklab, var(--neutral) 96%, var(--text));
+
+  --tone-primary-bg: color-mix(in oklab, var(--primary) 26%, var(--surface));
+  --tone-primary-bg-soft: color-mix(in oklab, var(--primary) 18%, var(--surface));
+  --tone-primary-border: color-mix(in oklab, var(--primary) 56%, var(--surface));
+  --tone-primary-border-strong: color-mix(in oklab, var(--primary) 72%, var(--surface));
+  --tone-primary-text: color-mix(in oklab, var(--primary) 94%, var(--text));
+
+  --tone-success-bg: color-mix(in oklab, var(--status-passed) 24%, var(--surface));
+  --tone-success-bg-soft: color-mix(in oklab, var(--status-passed) 16%, var(--surface));
+  --tone-success-border: color-mix(in oklab, var(--status-passed) 52%, var(--surface));
+  --tone-success-border-strong: color-mix(in oklab, var(--status-passed) 68%, var(--surface));
+  --tone-success-text: color-mix(in oklab, var(--status-passed) 94%, var(--text));
+
+  --tone-warning-bg: color-mix(in oklab, var(--status-blocked) 26%, var(--surface));
+  --tone-warning-bg-soft: color-mix(in oklab, var(--status-blocked) 18%, var(--surface));
+  --tone-warning-border: color-mix(in oklab, var(--status-blocked) 54%, var(--surface));
+  --tone-warning-border-strong: color-mix(in oklab, var(--status-blocked) 70%, var(--surface));
+  --tone-warning-text: color-mix(in oklab, var(--status-blocked) 94%, var(--text));
+
+  --tone-danger-bg: color-mix(in oklab, var(--status-failure) 24%, var(--surface));
+  --tone-danger-bg-soft: color-mix(in oklab, var(--status-failure) 16%, var(--surface));
+  --tone-danger-border: color-mix(in oklab, var(--status-failure) 52%, var(--surface));
+  --tone-danger-border-strong: color-mix(in oklab, var(--status-failure) 68%, var(--surface));
+  --tone-danger-text: color-mix(in oklab, var(--status-failure) 94%, var(--text));
+
+  --tone-info-bg: color-mix(in oklab, var(--status-skipped) 24%, var(--surface));
+  --tone-info-bg-soft: color-mix(in oklab, var(--status-skipped) 16%, var(--surface));
+  --tone-info-border: color-mix(in oklab, var(--status-skipped) 52%, var(--surface));
+  --tone-info-border-strong: color-mix(in oklab, var(--status-skipped) 68%, var(--surface));
+  --tone-info-text: color-mix(in oklab, var(--status-skipped) 94%, var(--text));
+
+  --tone-error-bg: color-mix(in oklab, var(--status-error) 24%, var(--surface));
+  --tone-error-bg-soft: color-mix(in oklab, var(--status-error) 16%, var(--surface));
+  --tone-error-border: color-mix(in oklab, var(--status-error) 52%, var(--surface));
+  --tone-error-border-strong: color-mix(in oklab, var(--status-error) 68%, var(--surface));
+  --tone-error-text: color-mix(in oklab, var(--status-error) 94%, var(--text));
+
+  /* Tag-specific boosts: less washed out in dark mode */
+  --tag-fill-bg: color-mix(in oklab, var(--surface) 90%, var(--accent-action) 10%);
+  --tag-fill-border: color-mix(in oklab, var(--accent-action) 42%, var(--border));
+  --tag-fill-foreground: var(--text);
+  --tag-outline-bg: color-mix(in oklab, var(--bg) 88%, var(--accent-action) 12%);
+  --tag-outline-border: color-mix(in oklab, var(--accent-action) 52%, var(--border));
+  --tag-outline-foreground: var(--text);
+  --tag-remove-foreground: color-mix(in oklab, var(--text) 72%, var(--text-muted));
+  --tag-remove-hover-bg: color-mix(in oklab, var(--accent-action) 20%, var(--surface));
+  --tag-remove-hover-foreground: var(--text);
+  --tag-toggle-bg: color-mix(in oklab, var(--surface) 92%, var(--accent-action) 8%);
+  --tag-toggle-border: color-mix(in oklab, var(--accent-action) 44%, var(--border-strong));
+  --tag-toggle-foreground: var(--text);
+  --tag-toggle-hover-border: color-mix(in oklab, var(--accent-action) 74%, var(--surface));
+  --tag-empty-bg: color-mix(in oklab, var(--surface-muted) 88%, var(--accent-action) 12%);
+  --tag-empty-border: color-mix(in oklab, var(--accent-action) 42%, var(--border-strong));
+  --tag-empty-foreground: color-mix(in oklab, var(--text) 74%, var(--text-muted));
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in srgb, var(--ring), transparent 50%);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  ::selection {
+    background-color: var(--highlight-bg);
+    color: var(--highlight-foreground);
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  /**
+   * Default typography — shared weight and line-height across headings, labels, buttons.
+   * Tailwind utility classes override these automatically (e.g. text-sm, font-normal).
+   */
+  h1, h2, h3, h4, label, button {
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h1 { font-size: var(--text-2xl); }
+  h2 { font-size: var(--text-xl); }
+  h3 { font-size: var(--text-lg); }
+  h4, label, button { font-size: var(--text-base); }
+
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+
+  /**
+   * Sort buttons inside table headers inherit the cell's typography so sortable
+   * and plain headers render identically.
+   */
+  thead[data-slot="table-header"] th[data-slot="table-head"] button {
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+  }
+
+  /**
+   * Native text-like fields: styled with theme tokens.
+   * Tailwind utilities on the element override these (e.g. border-0 bg-transparent).
+   */
+  :is(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="image"], [type="submit"], [type="reset"], [type="button"], [type="hidden"]),
+    textarea,
+    select
+  ) {
+    background-color: var(--input-background);
+    border: 1px solid var(--input);
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--foreground);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-base);
+    line-height: 1.5;
+  }
+
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="image"], [type="submit"], [type="reset"], [type="button"], [type="hidden"]) {
+    font-weight: var(--font-weight-normal);
+  }
+
+  :is(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="image"], [type="submit"], [type="reset"], [type="button"], [type="hidden"]),
+    textarea
+  ):read-only {
+    background-color: var(--input-readonly-background);
+    color: var(--muted-foreground);
+  }
+}
+
+/*
+ * Unified notification surface: Notification Center + Sonner toasts.
+ * !important is required where Sonner's injected CSS wins the cascade.
+ */
+.tms-notification-row {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--foreground);
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+  gap: 0.5rem !important;
+  align-items: flex-start !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  color: var(--foreground) !important;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem !important;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-title] {
+  font-weight: 400 !important;
+  line-height: 1.25rem !important;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="success"] [data-icon],
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="error"] [data-icon] {
+  margin-top: 0.125rem !important;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="success"] [data-icon] {
+  color: var(--status-passed) !important;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="error"] [data-icon] {
+  color: var(--status-failure) !important;
+}
+
+/* Dismiss button — shared base for notification row */
+.tms-notification-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  width: 1.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  padding: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] {
+  left: unset !important;
+  right: 0.375rem !important;
+  top: 0.375rem !important;
+  transform: none !important;
+  height: 1.75rem !important;
+  width: 1.75rem !important;
+  border-radius: var(--radius-md) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--muted-foreground) !important;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease !important;
+}
+
+.tms-notification-dismiss:is(:hover, :focus-visible) {
+  border-color: var(--border);
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:hover,
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:focus-visible {
+  border-color: var(--border) !important;
+  background-color: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+.tms-notification-dismiss:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring), transparent 50%);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring), transparent 50%) !important;
+}

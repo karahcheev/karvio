@@ -1,0 +1,143 @@
+site_name: Karvio Documentation
+site_description: Self-hosted test management system for QA teams
+site_url: https://karahcheev.github.io/karvio
+repo_url: https://github.com/karahcheev/karvio
+repo_name: karahcheev/karvio
+
+extra_css:
+  - stylesheets/extra.css
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+  features:
+    - navigation.indexes
+    - navigation.path
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+exclude_docs: |
+  _site/**
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - attr_list
+  - md_in_html
+  - tables
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Key Concepts: getting-started/concepts.md
+  - Glossary & Style Guide: user-guide/glossary-style-guide.md
+  - Role & Permissions: user-guide/permissions.md
+  - Release Scope:
+      - user-guide/release-scope/index.md
+      - Products: user-guide/release-scope/products.md
+      - Components: user-guide/release-scope/components.md
+      - Component Coverage: user-guide/release-scope/component-coverage.md
+      - Milestones: user-guide/release-scope/milestones.md
+      - Test Plans: user-guide/release-scope/test-plans.md
+      - Practical Scenarios: user-guide/release-scope/scenarios.md
+  - Test Cases:
+      - user-guide/test-cases/index.md
+      - Test Suites: user-guide/test-cases/suites.md
+      - Create Test Case: user-guide/test-cases/create.md
+      - Test Case Detail: user-guide/test-cases/detail.md
+      - Bulk, Permissions, API: user-guide/test-cases/bulk-permissions-api.md
+      - Scenarios & Practices: user-guide/test-cases/scenarios-practices.md
+  - Test Runs:
+      - user-guide/test-runs/index.md
+      - Test Runs List: user-guide/test-runs/list.md
+      - Create Runs: user-guide/test-runs/create.md
+      - Run Overview: user-guide/test-runs/overview.md
+      - Results & Imports: user-guide/test-runs/results.md
+      - Permissions & API: user-guide/test-runs/permissions-api.md
+      - Scenarios, Troubleshooting, Practices: user-guide/test-runs/scenarios-troubleshooting-practices.md
+  - Test Datasets:
+      - user-guide/datasets/index.md
+      - Dataset Registry: user-guide/datasets/registry.md
+      - Create & Edit Datasets: user-guide/datasets/create-and-edit.md
+      - Bindings & Revisions: user-guide/datasets/bindings-revisions.md
+      - Permissions & API: user-guide/datasets/permissions-api.md
+      - Scenarios & Practices: user-guide/datasets/scenarios-practices.md
+  - Environments:
+      - user-guide/environments/index.md
+      - Environment Registry: user-guide/environments/registry.md
+      - Create Environment: user-guide/environments/create.md
+      - Environment Details: user-guide/environments/details.md
+      - Permissions & API: user-guide/environments/permissions-api.md
+      - Scenarios & Practices: user-guide/environments/scenarios-practices.md
+  - Performance Testing: user-guide/performance-testing.md
+  - Overview Dashboard: user-guide/overview-dashboard.md
+  - Audit Logs: user-guide/audit-logs.md
+  - Project & Users:
+      - Projects: user-guide/project-users/projects.md
+      - Users: user-guide/project-users/users.md
+  - Notifications:
+      - user-guide/notifications/index.md
+      - Email: user-guide/notifications/email.md
+      - Slack: user-guide/notifications/slack.md
+      - Notifications: user-guide/notifications/notifications.md
+  - Integrations:
+      - Jira: user-guide/integrations/jira.md
+      - JUnit XML Import: user-guide/integrations/junit-xml.md
+  - API Reference:
+      - user-guide/api/index.md
+      - Authorization: user-guide/api/authorization.md
+      - Projects & Members: user-guide/api/projects.md
+      - Users: user-guide/api/users.md
+      - Release Scope: user-guide/api/release-scope/index.md
+      - Products: user-guide/api/release-scope/products.md
+      - Components: user-guide/api/release-scope/components.md
+      - Test Case Coverage: user-guide/api/release-scope/test-case-coverage.md
+      - Milestones: user-guide/api/release-scope/milestones.md
+      - Test Plans: user-guide/api/release-scope/test-plans.md
+      - Test Cases:
+          - user-guide/api/test-cases/index.md
+          - Suites: user-guide/api/test-cases/suites.md
+          - Cases: user-guide/api/test-cases/cases.md
+          - Steps: user-guide/api/test-cases/steps.md
+          - Bulk Operations: user-guide/api/test-cases/bulk-operations.md
+      - Test Runs:
+          - user-guide/api/test-runs/index.md
+          - Runs: user-guide/api/test-runs/runs.md
+          - Run Cases: user-guide/api/test-runs/run-cases.md
+          - Rows: user-guide/api/test-runs/rows.md
+          - Reruns: user-guide/api/test-runs/reruns.md
+          - Imports & Exports: user-guide/api/test-runs/imports-exports.md
+      - Datasets:
+          - user-guide/api/datasets/index.md
+          - Dataset Endpoints: user-guide/api/datasets/datasets.md
+          - Bindings: user-guide/api/datasets/bindings.md
+          - Revisions: user-guide/api/datasets/revisions.md
+      - Environments: user-guide/api/environments.md
+      - Attachments: user-guide/api/attachments.md
+      - Reports & Imports: user-guide/api/reports.md
+      - Performance: user-guide/api/performance.md
+      - Audit Logs: user-guide/api/audit-logs.md
+      - Notifications: user-guide/api/notifications.md
+      - Jira Integration: user-guide/api/jira.md
+      - AI: user-guide/api/ai.md
+      - System: user-guide/api/system.md
