@@ -62,9 +62,6 @@ The guides use the following conventions:
 - Warning blocks call out destructive actions such as deleting projects, runs, or attachments.
 - `SCREENSHOT TODO` blocks mark the exact locations where product screenshots should be added later.
 
-!!! tip
-    When adding screenshots, prefer clean project data and crop only enough to keep navigation context visible. For workflows, capture the list page first, then the create/edit dialog, then the resulting detail page.
-
 ---
 
 ## Administrator Guides
