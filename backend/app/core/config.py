@@ -2,6 +2,11 @@ from functools import lru_cache
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import URL
+
+
+def escape_configparser_interpolation(value: str) -> str:
+    return value.replace("%", "%%")
 
 
 class Settings(BaseSettings):
@@ -63,10 +68,14 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _build_database_url(self) -> "Settings":
         if not self.database_url:
-            self.database_url = (
-                f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}"
-                f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
-            )
+            self.database_url = URL.create(
+                "postgresql+psycopg",
+                username=self.postgres_user,
+                password=self.postgres_password,
+                host=self.postgres_host,
+                port=self.postgres_port,
+                database=self.postgres_db,
+            ).render_as_string(hide_password=False)
         return self
 
     @property

@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.core.config import get_settings
+from app.core.config import escape_configparser_interpolation, get_settings
 from app.db.base import Base
 
 # Import all models so Base.metadata includes all tables
@@ -14,7 +14,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.database_url)
+config.set_main_option("sqlalchemy.url", escape_configparser_interpolation(settings.database_url))
 target_metadata = Base.metadata
 
 
