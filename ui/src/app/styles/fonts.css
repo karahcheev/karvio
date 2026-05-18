@@ -1,0 +1,4 @@
+/* Reserved for local @font-face rules; file kept so global style imports stay stable. */
+:root {
+  font-synthesis: none;
+}

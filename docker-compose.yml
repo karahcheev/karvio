@@ -1,0 +1,103 @@
+x-postgres-env: &postgres-env
+  POSTGRES_DB: karvio
+  POSTGRES_USER: karvio
+  POSTGRES_PASSWORD: karvio
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      <<: *postgres-env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        until python -c \"import psycopg; psycopg.connect(host='postgres', port=5432, dbname='$POSTGRES_DB', user='$POSTGRES_USER', password='$POSTGRES_PASSWORD')\" 2>/dev/null; do
+          echo 'Waiting for postgres...'; sleep 2;
+        done &&
+        alembic upgrade head &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+    expose:
+      - "8000"
+    volumes:
+      - app_data:/app/data
+    environment:
+      <<: *postgres-env
+      APP_BASE_URL: https://karvio.example.com
+      ADMIN_PASSWORD: CHANGE_ME_STRONG_ADMIN_PASSWORD
+      # Generate: openssl rand -base64 64
+      AUTH_SECRET: CHANGE_ME_LONG_RANDOM_SECRET
+      BOOTSTRAP_ENABLED: "false"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/status').getcode()==200 else 1)\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - internal
+
+  procrastinate-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    command: >
+      sh -c "
+        until python -c \"import psycopg; psycopg.connect(host='postgres', port=5432, dbname='$POSTGRES_DB', user='$POSTGRES_USER', password='$POSTGRES_PASSWORD')\" 2>/dev/null; do
+          echo 'Waiting for postgres...'; sleep 2;
+        done &&
+        python -m procrastinate --app=app.core.queue.queue_app worker
+      "
+    volumes:
+      - app_data:/app/data
+    environment:
+      <<: *postgres-env
+    networks:
+      - internal
+
+  frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+  app_data:
+
+networks:
+  internal:
+    driver: bridge

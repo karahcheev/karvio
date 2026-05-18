@@ -1,0 +1,119 @@
+# Configuration template. Used as reference for all available settings.
+# For production deployment, edit docker-compose.yml directly.
+
+# -----------------------------------------------------------------------------
+# Application
+# -----------------------------------------------------------------------------
+# APP_NAME=Karvio
+# APP_VERSION=1.0.0
+# API_PREFIX=/api/v1
+
+# Public HTTPS URL of your Karvio instance.
+# Also used as the default allowed CORS origin and in Jira issue links.
+APP_BASE_URL=https://karvio.example.com
+
+# LOG_LEVEL=INFO
+# LOG_JSON=true
+
+# -----------------------------------------------------------------------------
+# PostgreSQL
+# -----------------------------------------------------------------------------
+POSTGRES_DB=karvio
+POSTGRES_USER=karvio
+# Generate: openssl rand -base64 32
+POSTGRES_PASSWORD=CHANGE_ME_STRONG_DB_PASSWORD
+
+# Default host is `postgres` (Docker Compose service name).
+# Override for local runs outside Docker:
+# POSTGRES_HOST=localhost
+
+# DATABASE_URL is built automatically from POSTGRES_* vars.
+# Set explicitly only if you need a non-standard connection string.
+# DATABASE_URL=postgresql+psycopg://karvio:password@postgres:5432/karvio
+
+# -----------------------------------------------------------------------------
+# Security
+# -----------------------------------------------------------------------------
+# Initial admin account password. Rotate after first login.
+ADMIN_PASSWORD=CHANGE_ME_STRONG_ADMIN_PASSWORD
+
+# 64+ random bytes. Changing this invalidates all existing sessions.
+# Generate: openssl rand -base64 64
+AUTH_SECRET=CHANGE_ME_LONG_RANDOM_SECRET
+
+# ACCESS_TOKEN_TTL_SECONDS=28800
+
+# -----------------------------------------------------------------------------
+# Bootstrap
+# -----------------------------------------------------------------------------
+# Set to true ONLY for the very first startup to create the admin account and
+# a default project. Set back to false after logging in for the first time.
+BOOTSTRAP_ENABLED=false
+
+# =============================================================================
+# Optional — uncomment and configure only if you need these features
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# CORS — override if your frontend is served from a different origin than APP_BASE_URL
+# -----------------------------------------------------------------------------
+# CORS_ORIGINS=https://karvio.example.com,https://other.example.com
+
+# -----------------------------------------------------------------------------
+# Attachments and performance artifacts
+# Default paths match the Docker container layout (/app/data/...).
+# Override for local runs outside Docker:
+# -----------------------------------------------------------------------------
+# ATTACHMENT_STORAGE_DRIVER=localstorage
+# ATTACHMENT_LOCAL_ROOT=./data/attachments
+# PERFORMANCE_ARTIFACT_ROOT=./data/performance_artifacts
+
+# -----------------------------------------------------------------------------
+# Metrics (Prometheus-compatible endpoint, enabled by default)
+# -----------------------------------------------------------------------------
+# METRICS_ENABLED=true
+# METRICS_PATH=/metrics
+
+# -----------------------------------------------------------------------------
+# Session cookie (defaults are safe for HTTPS production)
+# -----------------------------------------------------------------------------
+# SESSION_COOKIE_NAME=karvio_session
+# SESSION_COOKIE_SECURE=true
+# SESSION_COOKIE_SAME_SITE=lax
+
+# -----------------------------------------------------------------------------
+# Status queue tuning
+# -----------------------------------------------------------------------------
+# STATUS_QUEUE_BACKLOG_WARN=100
+# STATUS_QUEUE_BACKLOG_FAIL=1000
+# STATUS_PROCESSING_STALE_SECONDS=300
+# STATUS_PENDING_STALE_SECONDS=300
+
+# -----------------------------------------------------------------------------
+# Audit log
+# -----------------------------------------------------------------------------
+# AUDIT_RETENTION_DAYS=365
+# AUDIT_QUEUE_MAX_ATTEMPTS=5
+# AUDIT_QUEUE_RETRY_MAX_SECONDS=300
+
+# -----------------------------------------------------------------------------
+# Jira integration (configure API token and site in the app UI after login)
+# -----------------------------------------------------------------------------
+# JIRA_API_BASE_URL=https://api.atlassian.com
+# JIRA_HTTP_TIMEOUT_SECONDS=20
+# JIRA_HTTP_MAX_RETRIES=4
+# JIRA_SYNC_DEFAULT_INTERVAL_SECONDS=300
+# JIRA_SYNC_CRON=*/5 * * * *
+
+# -----------------------------------------------------------------------------
+# AI test case assistant
+# Project managers can also configure AI per project in Settings → AI.
+# -----------------------------------------------------------------------------
+# AI_TEST_CASE_ASSISTANT_ENABLED=false
+# AI_PROVIDER=openai
+# AI_MODEL=gpt-4o-mini
+# AI_API_KEY=                   # server-side only, never expose to the browser
+# AI_TIMEOUT_MS=30000
+# AI_HTTP_MAX_RETRIES=2
+# AI_DUPLICATE_HIGH_THRESHOLD=0.88
+# AI_DUPLICATE_MEDIUM_THRESHOLD=0.72
