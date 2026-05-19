@@ -29,11 +29,8 @@ services:
         condition: service_healthy
     command: >
       sh -c "
-        until python -c \"import psycopg; psycopg.connect(host='postgres', port=5432, dbname='$POSTGRES_DB', user='$POSTGRES_USER', password='$POSTGRES_PASSWORD')\" 2>/dev/null; do
-          echo 'Waiting for postgres...'; sleep 2;
-        done &&
         alembic upgrade head &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000
+        exec uvicorn app.main:app --host 0.0.0.0 --port 8000
       "
     expose:
       - "8000"
@@ -70,10 +67,7 @@ services:
         condition: service_healthy
     command: >
       sh -c "
-        until python -c \"import psycopg; psycopg.connect(host='postgres', port=5432, dbname='$POSTGRES_DB', user='$POSTGRES_USER', password='$POSTGRES_PASSWORD')\" 2>/dev/null; do
-          echo 'Waiting for postgres...'; sleep 2;
-        done &&
-        python -m procrastinate --app=app.core.queue.queue_app worker
+        exec python -m procrastinate --app=app.core.queue.queue_app worker
       "
     volumes:
       - app_data:/app/data
