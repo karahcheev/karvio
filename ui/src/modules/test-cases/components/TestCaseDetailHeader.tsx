@@ -1,8 +1,9 @@
 // Detail page header: navigation, edit/save, and overflow actions for a test case.
-import { Archive, Copy, Edit3, Loader2, MoreVertical, Paperclip, Save, Sparkles, Trash2 } from "lucide-react";
+import { Archive, Copy, Download, Edit3, Loader2, MoreVertical, Paperclip, Save, Sparkles, Trash2 } from "lucide-react";
 import { invokeMaybeAsync } from "@/shared/lib/invoke-maybe-async";
 import { DetailPageHeader } from "@/shared/ui/DetailPageHeader";
 import { Button } from "@/shared/ui/Button";
+import { TEST_CASE_EXPORT_FORMATS, type TestCaseExportFormat } from "@/shared/api";
 
 type TestCaseDetailHeaderProps = Readonly<{
   projectId: string | undefined;
@@ -23,6 +24,8 @@ type TestCaseDetailHeaderProps = Readonly<{
   onReviewWithAi: () => void;
   onArchive: () => void;
   onDelete: () => void;
+  onExport: (format: TestCaseExportFormat) => void | Promise<void>;
+  exportBusy: boolean;
   onCaseAttachmentSelect: (file: File) => void;
   onEditStart: () => void;
   onCancelEdit: () => void;
@@ -47,6 +50,8 @@ export function TestCaseDetailHeader({
   onCloneOpen,
   onArchive,
   onDelete,
+  onExport,
+  exportBusy,
   onCaseAttachmentSelect,
   onEditStart,
   onCancelEdit,
@@ -93,7 +98,7 @@ export function TestCaseDetailHeader({
               </Button>
 
               {actionsMenuOpen ? (
-                <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg">
+                <div className="absolute right-0 top-full z-10 mt-2 w-64 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg">
                   <div className="p-1">
                     <Button
                       unstyled
@@ -121,6 +126,26 @@ export function TestCaseDetailHeader({
                       <Archive className="h-4 w-4" />
                       Archive
                     </Button>
+                    <div className="my-1 border-t border-[var(--border)]" />
+                    <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
+                      {exportBusy ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                      Export as
+                    </div>
+                    {TEST_CASE_EXPORT_FORMATS.map((format) => (
+                      <Button
+                        key={format.value}
+                        unstyled
+                        disabled={exportBusy}
+                        onClick={() => invokeMaybeAsync(() => onExport(format.value))}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--foreground)] hover:bg-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {format.label}
+                      </Button>
+                    ))}
                     <div className="my-1 border-t border-[var(--border)]" />
                     <Button
                       unstyled

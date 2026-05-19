@@ -1,4 +1,5 @@
-import { apiRequest } from "@/shared/api/client";
+import { apiFetch, apiRequest } from "@/shared/api/client";
+import { downloadResponseAsFile } from "./helpers";
 import {
   deleteAttachment,
   downloadAttachment,
@@ -110,6 +111,77 @@ export async function getTestCasesPage(params: {
   if (params.sortBy) query.set("sort_by", params.sortBy);
   if (params.sortOrder) query.set("sort_order", params.sortOrder);
   return apiRequest<TestCasesPageResponse>(`/test-cases?${query.toString()}`);
+}
+
+export type TestCaseExportFormat =
+  | "csv"
+  | "testlink_xml"
+  | "xray_json"
+  | "native_json"
+  | "junit_xml";
+
+export const TEST_CASE_EXPORT_FORMATS: ReadonlyArray<{
+  value: TestCaseExportFormat;
+  label: string;
+}> = [
+  { value: "csv", label: "CSV (TestRail / Zephyr / qTest)" },
+  { value: "testlink_xml", label: "TestLink XML" },
+  { value: "xray_json", label: "Xray / Zephyr JSON" },
+  { value: "junit_xml", label: "JUnit XML" },
+  { value: "native_json", label: "JSON" },
+];
+
+const EXPORT_FORMAT_EXTENSION: Record<TestCaseExportFormat, string> = {
+  csv: "csv",
+  testlink_xml: "xml",
+  xray_json: "json",
+  native_json: "json",
+  junit_xml: "xml",
+};
+
+export async function downloadTestCaseExport(
+  testCaseId: string,
+  format: TestCaseExportFormat,
+): Promise<void> {
+  const response = await apiFetch(
+    `/test-cases/${encodeURIComponent(testCaseId)}/export?format=${format}`,
+  );
+  await downloadResponseAsFile(response, `${testCaseId}.${EXPORT_FORMAT_EXTENSION[format]}`);
+}
+
+export type TestCasesExportFilters = {
+  suiteIds?: string[];
+  statuses?: string[];
+  priorities?: string[];
+  tags?: string[];
+  ownerId?: string;
+  search?: string;
+};
+
+export async function downloadTestCasesExport(
+  projectId: string,
+  format: TestCaseExportFormat,
+  opts: { testCaseIds?: string[]; filters?: TestCasesExportFilters },
+): Promise<void> {
+  const query = new URLSearchParams({ project_id: projectId, format });
+  if (opts.testCaseIds?.length) {
+    for (const id of opts.testCaseIds) {
+      if (id) query.append("test_case_id", id);
+    }
+  } else if (opts.filters) {
+    const filters = opts.filters;
+    filters.suiteIds?.forEach((suiteId) => suiteId && query.append("suite_id", suiteId));
+    filters.statuses?.forEach((status) => status && query.append("status", status));
+    filters.priorities?.forEach((priority) => priority && query.append("priority", priority));
+    filters.tags?.forEach((tag) => tag && query.append("tag", tag));
+    if (filters.ownerId) query.set("owner_id", filters.ownerId);
+    if (filters.search?.trim()) query.set("search", filters.search.trim());
+  }
+  const response = await apiFetch(`/test-cases/export?${query.toString()}`);
+  await downloadResponseAsFile(
+    response,
+    `test-cases-${projectId}.${EXPORT_FORMAT_EXTENSION[format]}`,
+  );
 }
 
 export async function getTestCase(testCaseId: string): Promise<TestCaseDto> {

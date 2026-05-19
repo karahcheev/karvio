@@ -198,6 +198,7 @@ export function useTestCasesPageData(params: UseTestCasesPageDataParams) {
   );
 
   return {
+    selectedSuiteIdsForFilter,
     suites,
     suiteNamesById,
     testCases,

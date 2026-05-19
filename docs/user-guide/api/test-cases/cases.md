@@ -14,6 +14,8 @@ This page covers test case catalog list, create, read, update, and delete endpoi
 | `DELETE` | `/test-cases/{test_case_id}` | Delete a test case and its attachments. | `lead` |
 | `GET` | `/test-cases/{test_case_id}/steps` | Get structured steps for a step-based case. | `viewer` |
 | `PUT` | `/test-cases/{test_case_id}/steps` | Replace structured steps. | `tester` |
+| `GET` | `/test-cases/{test_case_id}/export?format={format}` | Export one test case in a TMS-compatible format. | `viewer` |
+| `GET` | `/test-cases/export?project_id={id}&format={format}` | Export many test cases (selected ids or current filters). | `viewer` |
 
 ## List Query Parameters
 
@@ -202,6 +204,53 @@ Response:
 
 Bulk delete removes attachments for deleted test cases. Confirm the project scope before using it from automation.
 
+## Export
+
+Two read-only endpoints export test cases in formats accepted by popular test management systems. Both require `viewer` and return a file download (`Content-Disposition: attachment`).
+
+| `format` | Description | File extension | Media type |
+| --- | --- | --- | --- |
+| `csv` | Columnar CSV importable by TestRail, Zephyr Scale, qTest, and Xray. | `.csv` | `text/csv` |
+| `testlink_xml` | TestLink test case interchange XML, nested by suite. | `.xml` | `application/xml` |
+| `xray_json` | Xray / Zephyr style JSON for Jira-based import. | `.json` | `application/json` |
+| `junit_xml` | JUnit-style XML that round-trips through the JUnit import path. | `.xml` | `application/xml` |
+| `native_json` | Full-fidelity Karvio JSON for backup and re-import. | `.json` | `application/json` |
+
+`format` defaults to `csv` on the bulk endpoint and is required on the single-case endpoint. An unsupported value returns `422`.
+
+### Single Test Case
+
+```http
+GET /api/v1/test-cases/{test_case_id}/export?format=testlink_xml
+```
+
+Exports exactly one case. The file is named after the case key, for example `TC-1042.xml`.
+
+### Bulk Export
+
+```http
+GET /api/v1/test-cases/export?project_id=proj_1&format=csv
+```
+
+Selection rules:
+
+- **Selected ids** – pass one or more repeated `test_case_id` parameters to export exactly those cases. List filters are ignored in this mode.
+- **Filtered export** – omit `test_case_id`. The endpoint exports every case matching the supplied list filters, using the same query parameters as `GET /test-cases` (`search`, repeated `status`, repeated `priority`, repeated `suite_id`, repeated `tag`, `owner_id`, repeated `product_id`, repeated `component_id`, `minimum_component_risk_level`).
+
+Scope notes:
+
+- When no `test_case_id` and no filters are supplied, **all cases in the project are exported**, including `draft` and `archived`. The status filter is only applied when `status` is passed explicitly.
+- A single export is capped at **10,000 test cases**. When the filtered set is larger, the export is truncated to the first 10,000 by the list's default sort.
+- Steps, suite name, owner name, tags, preconditions, estimate, priority, status, and automated `raw_test` are included per case where applicable.
+
+```http
+GET /api/v1/test-cases/export?project_id=proj_1&format=testlink_xml&test_case_id=tc_123&test_case_id=tc_124
+```
+
+```http
+GET /api/v1/test-cases/export?project_id=proj_1&format=csv&suite_id=suite_checkout&status=active&priority=high
+```
+
 ## Curl Examples
 
 Create a test case:
@@ -226,6 +275,20 @@ List active high-priority payment cases:
 
 ```bash
 curl -sS "$KARVIO_URL/api/v1/test-cases?project_id=proj_1&status=active&priority=high&tag=payment&page=1&page_size=50" \
+  -H "Authorization: Bearer $KARVIO_TOKEN"
+```
+
+Export one case as TestLink XML:
+
+```bash
+curl -sS -OJ "$KARVIO_URL/api/v1/test-cases/tc_123/export?format=testlink_xml" \
+  -H "Authorization: Bearer $KARVIO_TOKEN"
+```
+
+Export the active payment cases of a project as CSV:
+
+```bash
+curl -sS -OJ "$KARVIO_URL/api/v1/test-cases/export?project_id=proj_1&format=csv&status=active&tag=payment" \
   -H "Authorization: Bearer $KARVIO_TOKEN"
 ```
 

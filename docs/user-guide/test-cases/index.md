@@ -28,7 +28,7 @@ Test Cases supports these workflows:
 The Test Cases screen has three primary areas:
 
 - **Suite tree** on the left organizes cases by stable product or testing areas.
-- **Toolbar** provides search, filters, create action, column visibility, and bulk actions.
+- **Toolbar** provides search, filters, create action, column visibility, bulk actions, and export.
 - **Table** shows cases with configurable columns, sorting, pagination, and row actions.
 
 ## Table Columns
@@ -68,3 +68,7 @@ Each row supports:
 - `Delete` to remove it after confirmation.
 
 Deleting a test case is destructive and also cleans up its case-owned attachments.
+
+## Export
+
+The toolbar `Export` control downloads test cases in TMS-compatible formats (CSV, TestLink XML, Xray/Zephyr JSON, JUnit XML, or JSON). With rows selected, only those cases are exported; with no selection, the current suite, filters, and search define the scope, so an unfiltered view exports the whole project. See [Bulk Operations, Permissions, and API](bulk-permissions-api.md#export) for the full scope rules and the 10,000-case limit.

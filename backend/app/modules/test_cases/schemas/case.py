@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.enums import ComponentRiskLevel, TestCasePriority, TestCaseStatus, TestCaseTemplateType, TestCaseType
+from app.modules.test_cases.export.formats import TestCaseExportFormat
 from app.modules.integrations.jira.schemas.integration import ExternalIssueLinkRead
 from app.modules.products.schemas.coverage import TestCaseCoverageRead, TestCaseCoverageWrite
 from app.modules.test_cases.schemas.dataset import TestCaseDatasetBindingRead
@@ -136,6 +137,16 @@ class TestCaseListQuery(BaseModel):
         "suite_name",
     ] = "created_at"
     sort_order: Literal["asc", "desc"] = "desc"
+
+
+class TestCaseExportQuery(TestCaseListQuery):
+    """List filters plus export selection. `format` picks the target TMS format."""
+
+    test_case_id: list[str] | None = Field(
+        default=None,
+        description="Export only these case ids. Omit to export all matching filters.",
+    )
+    format: TestCaseExportFormat = TestCaseExportFormat.csv
 
 
 class TestCasesList(BaseModel):

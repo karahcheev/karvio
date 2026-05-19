@@ -1,6 +1,6 @@
 import { createElement, useCallback, useState } from "react";
 import { useParams } from "react-router";
-import { useDeleteTestCaseMutation } from "@/shared/api";
+import { downloadTestCasesExport, useDeleteTestCaseMutation, type TestCaseExportFormat } from "@/shared/api";
 import { BulkSelectionToolbarActions } from "@/shared/ui";
 import { useDeleteConfirmation } from "@/shared/lib/use-delete-confirmation";
 import { getErrorMessage, notifyError, notifySuccess } from "@/shared/lib/notifications";
@@ -47,6 +47,47 @@ export function useTestCasesPage() {
     selection.setSelectedTests,
     preview.closePreview,
     () => selection.setOpenActionsTestId(() => null),
+  );
+
+  const [isExporting, setIsExporting] = useState(false);
+  const handleExport = useCallback(
+    async (format: TestCaseExportFormat) => {
+      if (!projectId || isExporting) return;
+      const selectedIds = Array.from(selection.selectedTests);
+      setIsExporting(true);
+      try {
+        await downloadTestCasesExport(projectId, format, {
+          testCaseIds: selectedIds.length > 0 ? selectedIds : undefined,
+          filters:
+            selectedIds.length > 0
+              ? undefined
+              : {
+                  suiteIds: data.selectedSuiteIdsForFilter
+                    ? Array.from(data.selectedSuiteIdsForFilter)
+                    : undefined,
+                  statuses:
+                    filters.selectedStatuses.size > 0
+                      ? (Array.from(filters.selectedStatuses) as string[])
+                      : undefined,
+                  priorities:
+                    filters.selectedPriorities.size > 0
+                      ? Array.from(filters.selectedPriorities)
+                      : undefined,
+                  search: filters.searchQuery.trim() || undefined,
+                },
+        });
+        notifySuccess(
+          selectedIds.length > 0
+            ? `Exported ${selectedIds.length} test case(s)`
+            : "Exported test cases",
+        );
+      } catch (error) {
+        notifyError(error, "Failed to export test cases.");
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [projectId, isExporting, selection.selectedTests, data.selectedSuiteIdsForFilter, filters.selectedStatuses, filters.selectedPriorities, filters.searchQuery],
   );
 
   const [deletingTestCaseId, setDeletingTestCaseId] = useState<string | null>(null);
@@ -170,6 +211,9 @@ export function useTestCasesPage() {
       setSelectedPriorities: filters.setSelectedPriorities,
       onClearAllFilters: filters.clearAllFilters,
       onNewTestCaseClick: handleNewTestCaseClick,
+      onExport: handleExport,
+      exportBusy: isExporting,
+      exportSelectedCount: selection.selectedTests.size,
       toolbarRightSlot:
         selection.selectedTests.size > 0
           ? createElement(BulkSelectionToolbarActions, {

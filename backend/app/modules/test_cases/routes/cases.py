@@ -1,6 +1,8 @@
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Path, Query, status
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_user
@@ -8,10 +10,13 @@ from app.api.dependencies.auth import get_project_id_required
 from app.api.dependencies.storage import get_attachment_storage
 from app.db.session import get_db
 from app.modules.projects.models import User
+from app.modules.test_cases.export import TestCaseExportFormat
+from app.modules.test_cases.export import service as export_service
 from app.modules.test_cases.schemas.case import (
     TestCaseBulkOperation,
     TestCaseBulkOperationResult,
     TestCaseCreate,
+    TestCaseExportQuery,
     TestCaseListQuery,
     TestCasePatch,
     TestCaseRead,
@@ -20,6 +25,14 @@ from app.modules.test_cases.schemas.case import (
 from app.modules.test_cases.schemas.steps import TestStepsReplaceRequest, TestStepsResponse
 from app.modules.test_cases.services import cases, steps
 from app.modules.attachments.adapters.storage import AttachmentStorage
+
+
+def _export_response(result: export_service.TestCaseExportResult) -> Response:
+    return Response(
+        content=result.content,
+        media_type=result.media_type,
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(result.filename)}"},
+    )
 
 
 router = APIRouter(prefix="/test-cases", tags=["test-cases"])
@@ -62,6 +75,40 @@ async def bulk_operate_test_cases(
         storage=storage,
         current_user=current_user,
     )
+
+
+@router.get("/export")
+async def export_test_cases(
+    project_id: Annotated[str, Depends(get_project_id_required)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    query: Annotated[TestCaseExportQuery, Query()],
+) -> Response:
+    result = await export_service.export_bulk(
+        db,
+        project_id=project_id,
+        query=query,
+        test_case_ids=query.test_case_id,
+        export_format=query.format,
+        current_user=current_user,
+    )
+    return _export_response(result)
+
+
+@router.get("/{test_case_id}/export")
+async def export_test_case(
+    test_case_id: Annotated[str, Path(...)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    export_format: Annotated[TestCaseExportFormat, Query(alias="format")],
+) -> Response:
+    result = await export_service.export_single(
+        db,
+        test_case_id=test_case_id,
+        export_format=export_format,
+        current_user=current_user,
+    )
+    return _export_response(result)
 
 
 @router.get("/{test_case_id}")

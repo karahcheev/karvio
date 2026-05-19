@@ -18,4 +18,5 @@ export * from "./TestCasesToolbar";
 export * from "./TestCaseDetailHeader";
 export * from "./TestCaseCloneModal";
 export * from "./TestCaseDefectsTab";
+export * from "./TestCaseExportMenu";
 export type * from "../utils/testCaseEditorTypes";

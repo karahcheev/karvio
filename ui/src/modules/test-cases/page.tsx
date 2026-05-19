@@ -129,6 +129,8 @@ export function TestCaseDetailModulePage() {
         onReviewWithAi={() => void model.handleRunAiReview()}
         onArchive={model.handleArchive}
         onDelete={model.handleDelete}
+        onExport={model.handleExport}
+        exportBusy={model.isExporting}
         onCaseAttachmentSelect={(file) => void model.handleCaseAttachmentUpload(file)}
         onEditStart={model.handleEditStart}
         onCancelEdit={model.handleCancelEdit}

@@ -11,6 +11,7 @@ In view mode, users can:
 - `Edit` the case;
 - `Actions -> Clone Test Case`;
 - `Actions -> AI Review` when AI is enabled;
+- `Actions -> Export as ...` to download the case in a TMS-compatible format;
 - `Actions -> Archive`;
 - `Actions -> Delete`.
 
@@ -109,3 +110,9 @@ Clone creates a new draft from an existing case. The wizard allows changes to:
 - tags.
 
 Fields, steps, and attachments are copied. After creation, the user lands on the new case.
+
+## Export
+
+`Actions -> Export as ...` downloads this single case in a format accepted by popular test management systems: `CSV (TestRail / Zephyr / qTest)`, `TestLink XML`, `Xray / Zephyr JSON`, `JUnit XML`, or `JSON`. The file is named after the case key, for example `TC-1042.xml`.
+
+To export many cases at once, use the `Export` control in the test cases toolbar. Selection and filter scope rules are described in [Bulk Operations, Permissions, and API](bulk-permissions-api.md#export).
