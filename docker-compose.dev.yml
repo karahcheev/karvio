@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: tms-postgres-dev
+    container_name: karvio-postgres-dev
     env_file:
       - ./config
     ports:
@@ -18,7 +18,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: tms-backend-dev
+    container_name: karvio-backend-dev
     depends_on:
       postgres:
         condition: service_healthy
@@ -26,11 +26,8 @@ services:
       - ./config
     command: >
       sh -c "
-        until python -c \"import psycopg, os, sys; psycopg.connect(os.environ['DATABASE_URL']); sys.exit(0)\" 2>/dev/null; do
-          echo 'Waiting for postgres...'; sleep 2;
-        done &&
         alembic upgrade head &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
     ports:
       - "8000:8000"
