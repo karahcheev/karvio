@@ -5,7 +5,9 @@ import { PageHeaderSection } from "@/shared/ui/PageHeader";
 import { FilterChecklistSection } from "@/shared/ui/FilterChecklistSection";
 import { SearchFiltersToolbar } from "@/shared/ui/SearchFiltersToolbar";
 import { formatTestCaseStatusLabel } from "./TestCaseBadges";
+import { TestCaseExportMenu } from "./TestCaseExportMenu";
 import type { SuiteNode } from "../utils/types";
+import type { TestCaseExportFormat } from "@/shared/api";
 import { Button } from "@/shared/ui/Button";
 
 type Props = Readonly<{
@@ -23,6 +25,9 @@ type Props = Readonly<{
   setSelectedPriorities: (set: Set<string>) => void;
   onClearAllFilters: () => void;
   onNewTestCaseClick: () => void;
+  onExport: (format: TestCaseExportFormat) => void | Promise<void>;
+  exportBusy: boolean;
+  exportSelectedCount: number;
   /** Shown to the right of the filters control (e.g. bulk selection icons). */
   toolbarRightSlot?: ReactNode;
 }>;
@@ -42,6 +47,9 @@ export function TestCasesToolbar({
   setSelectedPriorities,
   onClearAllFilters,
   onNewTestCaseClick,
+  onExport,
+  exportBusy,
+  exportSelectedCount,
   toolbarRightSlot,
 }: Props) {
   const selectedSuiteName = suites.find((suite) => suite.id === selectedSuite)?.name;
@@ -52,13 +60,21 @@ export function TestCasesToolbar({
         title="Test Cases"
         subtitle={selectedSuite ? `Viewing suite: ${selectedSuiteName}` : "All tests"}
         actions={
-          <Button unstyled
-            onClick={onNewTestCaseClick}
-            className="flex items-center gap-2 rounded-lg bg-[var(--action-primary-fill)] px-4 py-2 text-sm font-medium text-[var(--action-primary-foreground)] hover:bg-[var(--action-primary-fill-hover)]"
-          >
-            <Plus className="h-4 w-4" />
-            New Test Case
-          </Button>
+          <div className="flex items-center gap-2">
+            <TestCaseExportMenu
+              label={exportSelectedCount > 0 ? `Export (${exportSelectedCount})` : "Export"}
+              busy={exportBusy}
+              align="right"
+              onSelect={onExport}
+            />
+            <Button unstyled
+              onClick={onNewTestCaseClick}
+              className="flex items-center gap-2 rounded-lg bg-[var(--action-primary-fill)] px-4 py-2 text-sm font-medium text-[var(--action-primary-foreground)] hover:bg-[var(--action-primary-fill-hover)]"
+            >
+              <Plus className="h-4 w-4" />
+              New Test Case
+            </Button>
+          </div>
         }
       />
       <SearchFiltersToolbar

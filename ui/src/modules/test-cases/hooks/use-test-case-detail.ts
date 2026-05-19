@@ -1,12 +1,14 @@
 import { useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import {
+  downloadTestCaseExport,
   useAiTestCaseStatusQuery,
   useLinkJiraIssueMutation,
   useReviewAiTestCaseMutation,
   useUnlinkJiraIssueMutation,
   type ExternalIssueLinkDto,
   type ReviewAiTestCaseResponseDto,
+  type TestCaseExportFormat,
 } from "@/shared/api";
 import { notifyError, notifySuccess } from "@/shared/lib/notifications";
 import { useTestCaseDetailData } from "./use-test-case-detail-data";
@@ -80,6 +82,20 @@ export function useTestCaseDetail() {
       editor.handleEditStart();
     },
   });
+
+  const [isExporting, setIsExporting] = useState(false);
+  const handleExport = async (format: TestCaseExportFormat) => {
+    if (!testCaseId || isExporting) return;
+    setIsExporting(true);
+    try {
+      await downloadTestCaseExport(testCaseId, format);
+      notifySuccess(`Exported "${data.title || data.key}"`);
+    } catch (error) {
+      notifyError(error, "Failed to export test case.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const [tagInput, setTagInput] = useState("");
   const caseAttachmentInputRef = useRef<HTMLInputElement>(null);
@@ -326,6 +342,8 @@ export function useTestCaseDetail() {
     handleCloneCreate: cloneWizard.handleCloneCreate,
     handleArchive: actions.handleArchive,
     handleDelete: actions.handleDelete,
+    handleExport,
+    isExporting,
     handleRunAiReview,
     handleApplyAiReviewField,
     handleCaseAttachmentUpload: attachments.handleCaseAttachmentUpload,

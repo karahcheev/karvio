@@ -47,6 +47,42 @@ export async function fetchAllPageItems<T>(
   return items;
 }
 
+export function extractFilenameFromDisposition(
+  disposition: string | null,
+  fallback: string,
+): string {
+  if (!disposition) return fallback;
+  const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1]);
+    } catch {
+      return fallback;
+    }
+  }
+  const plainMatch = disposition.match(/filename="?([^"]+)"?/i);
+  return plainMatch?.[1] ?? fallback;
+}
+
+export async function downloadResponseAsFile(
+  response: Response,
+  fallback: string,
+): Promise<void> {
+  const blob = await response.blob();
+  const filename = extractFilenameFromDisposition(
+    response.headers.get("content-disposition"),
+    fallback,
+  );
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 export function formatRelativeTime(value: string | null): string {
   if (!value) return "Never";
   const ms = Date.now() - new Date(value).getTime();
