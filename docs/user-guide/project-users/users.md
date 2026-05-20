@@ -14,7 +14,7 @@ System users are accounts that can log in to Karvio. User management is availabl
 
 ### User List
 
-The Users page shows all accounts in the system. Each row displays the username, email, team, project count, last login date, and account status.
+The Users page shows all accounts in the system. Each row displays the username, email, team, system role, project count, last login date, and account status.
 
 #### Search and Sort
 
@@ -36,6 +36,7 @@ Only system administrators can create new accounts.
 | **Email** | User's email address |
 | **Password** | Initial password – the user should change it on first login |
 | **Team** | Optional team or department name |
+| **Role** | System role – `User` (default) or `Admin`. Only visible to administrators. |
 
 4. Click **Create**.
 
@@ -61,6 +62,31 @@ Users can change their own password from their profile settings. Administrators 
 2. Click **Set Password**.
 3. Enter and confirm the new password.
 4. Click **Save**.
+
+---
+
+### System Role
+
+Each account has a system-level role that controls access to administrative actions across the whole Karvio instance:
+
+| System role | Capabilities |
+|-------------|-------------|
+| **User** | Default role. Access to projects is granted via project membership. Cannot manage other users, auth providers, or system settings. |
+| **Admin** | Full system access: manage users (create, edit, enable/disable, reset password, delete), authentication providers, and system settings. Implicit access to all projects. |
+
+#### Promote or Demote a User
+
+Only system administrators can change another user's system role.
+
+1. Open the user from the Users list.
+2. Click **Edit**.
+3. Change the **Role** dropdown to `User` or `Admin`.
+4. Click **Save**.
+
+!!! note "Restrictions"
+    - The built-in `admin` account is protected: its role cannot be changed and the account cannot be disabled, renamed, or deleted.
+    - Administrators cannot demote themselves. Ask another administrator to change your role, or promote a second admin first.
+    - The **Role** field and selector are hidden for non-admin users.
 
 ---
 

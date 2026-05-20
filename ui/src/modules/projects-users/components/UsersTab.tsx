@@ -10,7 +10,7 @@ import { UnifiedTable, type UnifiedTableColumn, type UnifiedTableSorting } from 
 import { Button } from "@/shared/ui/Button";
 import { DateTimeCell, IdCell, PrimarySecondaryCell, StatusCell } from "@/shared/ui/table-cells";
 
-type UserColumn = "id" | "user" | "email" | "team" | "projects" | "status" | "last_login" | "created" | "updated";
+type UserColumn = "id" | "user" | "email" | "team" | "role" | "projects" | "status" | "last_login" | "created" | "updated";
 type UserStatusFilter = "enabled" | "disabled";
 
 // Table helpers
@@ -69,6 +69,19 @@ const USER_COLUMNS: UnifiedTableColumn<UserDto, UserColumn>[] = [
     minWidth: 100,
     renderCell: (user) => <span className="block truncate">{user.team || "—"}</span>,
     cellClassName: "text-[var(--foreground)]",
+  },
+  {
+    id: "role",
+    label: "Role",
+    menuLabel: "Role",
+    sortable: false,
+    defaultWidth: 96,
+    minWidth: 56,
+    renderCell: (user) => (
+      <StatusCell tone={user.role === "admin" ? "info" : "neutral"} className="px-2 py-1">
+        {user.role === "admin" ? "Admin" : "User"}
+      </StatusCell>
+    ),
   },
   {
     id: "projects",
@@ -188,7 +201,7 @@ export function UsersTab({
   const [selectedStatuses, setSelectedStatuses] = useState<Set<UserStatusFilter>>(new Set());
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
   const [visibleColumns, setVisibleColumns] = useState<Set<UserColumn>>(
-    new Set(["user", "email", "team", "projects", "status", "last_login"])
+    new Set(["user", "email", "team", "role", "projects", "status", "last_login"])
   );
 
   // Column toggle

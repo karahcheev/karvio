@@ -12,6 +12,7 @@ import {
   useProjectsQuery,
   useUsersQuery,
 } from "@/shared/api";
+import { getSessionUser } from "@/shared/auth";
 import { useDeleteConfirmation } from "@/shared/lib/use-delete-confirmation";
 import { getErrorMessage, notifyError, notifySuccess } from "@/shared/lib/notifications";
 import { useUrlHashState } from "@/shared/lib/use-url-hash-state";
@@ -23,6 +24,9 @@ import type { UnifiedTableSorting } from "@/shared/ui/Table";
 
 export function useProjectsUsersPage() {
   const { confirmDelete } = useDeleteConfirmation();
+  const sessionUser = getSessionUser();
+  const isCurrentUserAdmin = sessionUser?.role === "admin";
+  const currentUserId = sessionUser?.id ?? null;
   const [activeTab, setActiveTab] = useUrlHashState<WorkspaceTab>({
     values: WORKSPACE_TABS,
     defaultValue: "projects",
@@ -84,6 +88,7 @@ export function useProjectsUsersPage() {
   const [newUserLastName, setNewUserLastName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserTeam, setNewUserTeam] = useState("");
+  const [newUserRole, setNewUserRole] = useState<"user" | "admin">("user");
   const [resetPasswordValue, setResetPasswordValue] = useState("");
   const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
 
@@ -110,7 +115,8 @@ export function useProjectsUsersPage() {
       toNullable(userEditDraft.firstName) !== selectedUser.first_name ||
       toNullable(userEditDraft.lastName) !== selectedUser.last_name ||
       toNullable(userEditDraft.email) !== selectedUser.email ||
-      toNullable(userEditDraft.team) !== selectedUser.team
+      toNullable(userEditDraft.team) !== selectedUser.team ||
+      userEditDraft.role !== selectedUser.role
     );
   }, [selectedUser, userEditDraft]);
 
@@ -198,6 +204,7 @@ export function useProjectsUsersPage() {
         last_name: toNullable(newUserLastName),
         email: toNullable(newUserEmail),
         team: toNullable(newUserTeam),
+        role: newUserRole,
       });
       setUsers((prev) => [user, ...prev]);
       setNewUserName("");
@@ -206,6 +213,7 @@ export function useProjectsUsersPage() {
       setNewUserLastName("");
       setNewUserEmail("");
       setNewUserTeam("");
+      setNewUserRole("user");
       setShowUserPanel(false);
       await loadUsers();
       notifySuccess(`User "${getUserLabel(user)}" created`);
@@ -245,6 +253,11 @@ export function useProjectsUsersPage() {
     setUserUpdateError(null);
   };
 
+  const handleUserRoleDraftChange = (role: "user" | "admin") => {
+    setUserEditDraft((prev) => (prev ? { ...prev, role } : prev));
+    setUserUpdateError(null);
+  };
+
   const handleSaveUser = async () => {
     if (!isUserEditMode || !selectedUser || !userEditDraft) return;
     const nextUsername = userEditDraft.username.trim();
@@ -253,7 +266,7 @@ export function useProjectsUsersPage() {
       return;
     }
 
-    const patchPayload: { username?: string; first_name?: string | null; last_name?: string | null; email?: string | null; team?: string | null } = {};
+    const patchPayload: { username?: string; first_name?: string | null; last_name?: string | null; email?: string | null; team?: string | null; role?: "user" | "admin" } = {};
     const nextFirstName = toNullable(userEditDraft.firstName);
     const nextLastName = toNullable(userEditDraft.lastName);
     const nextEmail = toNullable(userEditDraft.email);
@@ -263,6 +276,7 @@ export function useProjectsUsersPage() {
     if (nextLastName !== selectedUser.last_name) patchPayload.last_name = nextLastName;
     if (nextEmail !== selectedUser.email) patchPayload.email = nextEmail;
     if (nextTeam !== selectedUser.team) patchPayload.team = nextTeam;
+    if (userEditDraft.role !== selectedUser.role) patchPayload.role = userEditDraft.role;
     if (Object.keys(patchPayload).length === 0) return;
 
     setIsSavingUser(true);
@@ -440,6 +454,7 @@ export function useProjectsUsersPage() {
         setNewUserLastName("");
         setNewUserEmail("");
         setNewUserTeam("");
+        setNewUserRole("user");
       },
       onCancelRename: cancelRenameUser,
       onDeleteUser: (userId: string) => void handleDeleteUser(userId),
@@ -485,6 +500,8 @@ export function useProjectsUsersPage() {
       newUserName,
       newUserPassword,
       newUserTeam,
+      newUserRole,
+      canManageRole: isCurrentUserAdmin,
       onAddUser: () => void handleAddUser(),
       onClose: () => setShowUserPanel(false),
       onUserEmailChange: setNewUserEmail,
@@ -493,6 +510,7 @@ export function useProjectsUsersPage() {
       onUserNameChange: setNewUserName,
       onUserPasswordChange: setNewUserPassword,
       onUserTeamChange: setNewUserTeam,
+      onUserRoleChange: setNewUserRole,
       userCreateError,
     },
     projectDetailsPanel: {
@@ -510,6 +528,8 @@ export function useProjectsUsersPage() {
       editLastName: userEditDraft?.lastName ?? "",
       editTeam: userEditDraft?.team ?? "",
       editUsername: userEditDraft?.username ?? "",
+      editRole: userEditDraft?.role ?? "user",
+      canManageRole: isCurrentUserAdmin && selectedUser?.id !== currentUserId,
       isEditMode: isUserEditMode,
       isSaveDisabled: !hasSelectedUserChanges || isSavingUser || !(userEditDraft?.username.trim() ?? ""),
       isSavingUser,
@@ -525,6 +545,7 @@ export function useProjectsUsersPage() {
       onEditLastNameChange: (value: string) => handleUserEditChange("lastName", value),
       onEditTeamChange: (value: string) => handleUserEditChange("team", value),
       onEditUsernameChange: (value: string) => handleUserEditChange("username", value),
+      onEditRoleChange: handleUserRoleDraftChange,
       onOpenResetPassword: handleOpenResetPassword,
       onSaveUser: () => void handleSaveUser(),
       onStartEdit: handleStartUserEdit,
