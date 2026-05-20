@@ -8,6 +8,17 @@ export async function login(payload: { username: string; password: string }): Pr
   });
 }
 
+export async function loginLdap(payload: {
+  provider_id: string;
+  username: string;
+  password: string;
+}): Promise<LoginResponseDto> {
+  return apiRequest<LoginResponseDto>("/auth/login/ldap", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function logout(): Promise<void> {
   await apiFetch("/auth/logout", { method: "POST" });
 }

@@ -1,4 +1,4 @@
-import { Bell, Bot, Mail, PlugZap } from "lucide-react";
+import { Bell, Bot, Mail, PlugZap, ShieldCheck } from "lucide-react";
 import { getSessionUser } from "@/shared/auth";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { UrlHashTabs } from "@/shared/ui/Tabs";
@@ -6,6 +6,7 @@ import { useUrlHashState } from "@/shared/lib/use-url-hash-state";
 import { NotificationsSettingsContent } from "./NotificationsSettingsContent";
 import { SmtpSettingsContent } from "./SmtpSettingsContent";
 import { JiraIntegrationsSettingsContent } from "./JiraIntegrationsSettingsContent";
+import { AuthenticationSettingsContent } from "./AuthenticationSettingsContent";
 import { AiSettingsContent } from "./AiSettingsContent";
 import { SETTINGS_TABS, type SettingsTab } from "./settings-types";
 
@@ -13,6 +14,7 @@ const SETTINGS_TAB_ITEMS = [
   { value: "notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
   { value: "smtp", label: "SMTP", icon: <Mail className="h-4 w-4" /> },
   { value: "integrations", label: "Integrations", icon: <PlugZap className="h-4 w-4" /> },
+  { value: "authentication", label: "Authentication", icon: <ShieldCheck className="h-4 w-4" /> },
   { value: "ai", label: "AI (beta)", icon: <Bot className="h-4 w-4" /> },
 ] satisfies { value: SettingsTab; label: string; icon: React.ReactNode }[];
 
@@ -93,6 +95,9 @@ export function SettingsModulePage() {
             }
             if (activeTab === "integrations") {
               return <JiraIntegrationsSettingsContent />;
+            }
+            if (activeTab === "authentication") {
+              return <AuthenticationSettingsContent />;
             }
             if (activeTab === "ai") {
               return <AiSettingsContent />;

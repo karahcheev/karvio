@@ -1,6 +1,5 @@
 import { apiRequest } from "@/shared/api/client";
 import { fetchAllPageItems, type ApiSortDirection } from "./helpers";
-import { clearCachedProjectMembers, getCachedProjectMembers, setCachedProjectMembers } from "./project-members-cache";
 import type { ProjectDto, ProjectMemberDto, ProjectMemberRole } from "./types";
 
 export type ProjectsSortBy = "created_at" | "id" | "name" | "members_count";
@@ -50,18 +49,12 @@ export async function getProjectMembers(
   projectId: string,
   params?: { sortBy?: ProjectMembersSortBy; sortDirection?: ApiSortDirection }
 ): Promise<ProjectMemberDto[]> {
-  const cached = getCachedProjectMembers(projectId, params);
-  if (cached) {
-    return cached;
-  }
   const query = new URLSearchParams({
     project_id: projectId,
   });
   if (params?.sortBy) query.set("sort_by", params.sortBy);
   if (params?.sortDirection) query.set("sort_order", params.sortDirection);
-  const items = await fetchAllPageItems<ProjectMemberDto>("/project-members", query);
-  setCachedProjectMembers(projectId, items, params);
-  return items;
+  return await fetchAllPageItems<ProjectMemberDto>("/project-members", query);
 }
 
 export async function createProjectMember(payload: {
@@ -69,29 +62,24 @@ export async function createProjectMember(payload: {
   user_id: string;
   role: ProjectMemberRole;
 }): Promise<ProjectMemberDto> {
-  const created = await apiRequest<ProjectMemberDto>("/project-members", {
+  return await apiRequest<ProjectMemberDto>("/project-members", {
     method: "POST",
     body: JSON.stringify(payload),
   });
-  clearCachedProjectMembers(payload.project_id);
-  return created;
 }
 
 export async function patchProjectMember(
   projectMemberId: string,
   payload: { role: ProjectMemberRole }
 ): Promise<ProjectMemberDto> {
-  const updated = await apiRequest<ProjectMemberDto>(`/project-members/${projectMemberId}`, {
+  return await apiRequest<ProjectMemberDto>(`/project-members/${projectMemberId}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
-  clearCachedProjectMembers(updated.project_id);
-  return updated;
 }
 
 export async function deleteProjectMember(projectMemberId: string): Promise<void> {
   await apiRequest<void>(`/project-members/${projectMemberId}`, {
     method: "DELETE",
   });
-  clearCachedProjectMembers();
 }

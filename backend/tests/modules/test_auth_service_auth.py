@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.core.errors import DomainError
+from app.models.enums import UserRole
 from app.modules.auth.schemas.auth import LoginRequest
 from app.modules.auth.services import auth as service
 from app.modules.projects.schemas.user import UserPasswordChangeRequest
@@ -20,6 +21,7 @@ def _user(**overrides):
         "is_enabled": True,
         "token_version": 3,
         "last_login_at": None,
+        "role": UserRole.user,
     }
     base.update(overrides)
     return SimpleNamespace(**base)
@@ -68,6 +70,10 @@ async def test_login_success_returns_token_and_user() -> None:
     with (
         patch("app.modules.auth.services.auth.auth_repo.get_user_by_username", new_callable=AsyncMock, return_value=user),
         patch("app.modules.auth.services.auth.verify_password", return_value=True),
+        patch(
+            "app.modules.auth.services.auth.provider_service.assert_local_login_allowed",
+            new_callable=AsyncMock,
+        ),
         patch("app.modules.auth.services.auth.audit_service.snapshot_entity", return_value={"id": "u1"}),
         patch("app.modules.auth.services.auth.audit_service.queue_update_event", new_callable=AsyncMock) as queue_update,
         patch("app.modules.auth.services.auth.create_access_token", return_value="token123"),

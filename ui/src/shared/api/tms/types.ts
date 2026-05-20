@@ -26,6 +26,118 @@ export interface LoginResponseDto {
   user: UserDto;
 }
 
+export type AuthProviderType = "local" | "ldap" | "oidc" | "google" | "azure";
+export type AuthProviderStatus = "enabled" | "disabled" | "misconfigured";
+
+export interface AuthProviderSecretsStateDto {
+  client_secret_configured: boolean;
+  ldap_bind_password_configured: boolean;
+}
+
+export interface AuthGroupMappingEntryDto {
+  external_value: string;
+  global_role?: "admin" | "user" | null;
+  project_id?: string | null;
+  project_role?: "viewer" | "tester" | "lead" | "manager" | null;
+}
+
+export type ProjectMemberRoleDto = "viewer" | "tester" | "lead" | "manager";
+
+export interface AuthAutoAssignProjectDto {
+  project_id: string;
+  role: ProjectMemberRoleDto;
+}
+
+export interface AuthProviderDto {
+  id: string;
+  type: AuthProviderType;
+  name: string;
+  login_label: string;
+  enabled: boolean;
+  sort_order: number;
+  auto_provision: boolean;
+  default_role: "user" | "admin";
+  new_user_enabled: boolean;
+  allow_email_linking: boolean;
+  local_admin_only: boolean;
+  config: Record<string, unknown>;
+  group_mapping: AuthGroupMappingEntryDto[];
+  full_group_sync: boolean;
+  auto_assign_projects: AuthAutoAssignProjectDto[];
+  secrets: AuthProviderSecretsStateDto;
+  status: AuthProviderStatus;
+  last_tested_at: string | null;
+  last_test_status: string | null;
+  last_test_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthProviderListDto {
+  items: AuthProviderDto[];
+}
+
+export interface AuthProviderTestCheckDto {
+  name: string;
+  passed: boolean;
+  detail?: string | null;
+}
+
+export interface AuthProviderTestResultDto {
+  status: "success" | "fail";
+  tested_at: string;
+  detail?: string | null;
+  checks: AuthProviderTestCheckDto[];
+}
+
+export interface AuthProviderCreatePayload {
+  type: AuthProviderType;
+  name: string;
+  login_label?: string | null;
+  enabled?: boolean;
+  sort_order?: number;
+  auto_provision?: boolean;
+  default_role?: "user" | "admin";
+  new_user_enabled?: boolean;
+  allow_email_linking?: boolean;
+  local_admin_only?: boolean;
+  config?: Record<string, unknown>;
+  secrets?: Record<string, string>;
+  group_mapping?: AuthGroupMappingEntryDto[];
+  full_group_sync?: boolean;
+  auto_assign_projects?: AuthAutoAssignProjectDto[];
+}
+
+export interface AuthProviderUpdatePayload {
+  name?: string;
+  login_label?: string;
+  enabled?: boolean;
+  sort_order?: number;
+  auto_provision?: boolean;
+  default_role?: "user" | "admin";
+  new_user_enabled?: boolean;
+  allow_email_linking?: boolean;
+  local_admin_only?: boolean;
+  config?: Record<string, unknown>;
+  secrets?: Record<string, string | null>;
+  group_mapping?: AuthGroupMappingEntryDto[];
+  full_group_sync?: boolean;
+  auto_assign_projects?: AuthAutoAssignProjectDto[];
+}
+
+export interface PublicAuthProviderDto {
+  id: string;
+  type: AuthProviderType;
+  label: string;
+  sort_order: number;
+  uses_password_form: boolean;
+}
+
+export interface PublicAuthConfigDto {
+  local_login: { enabled: boolean; label: string };
+  providers: PublicAuthProviderDto[];
+}
+
 export interface ApiKeyLoginDto {
   authenticated_at: string;
   ip: string | null;

@@ -1,6 +1,6 @@
 import type { ProjectNotificationRuleSettingsDto } from "@/shared/api";
 
-export const SETTINGS_TABS = ["notifications", "smtp", "integrations", "ai"] as const;
+export const SETTINGS_TABS = ["notifications", "smtp", "integrations", "authentication", "ai"] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 

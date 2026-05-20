@@ -16,6 +16,10 @@ async def test_ensure_default_data_creates_project_and_admin_when_missing() -> N
         patch("app.services.bootstrap.hash_password", return_value="hashed_password") as hash_password,
         patch("app.services.bootstrap.project_repo.get_by_name", new_callable=AsyncMock, return_value=None),
         patch("app.services.bootstrap.user_repo.get_by_username", new_callable=AsyncMock, return_value=None),
+        patch(
+            "app.services.bootstrap.provider_service.ensure_default_local_provider",
+            new_callable=AsyncMock,
+        ),
     ):
         await ensure_default_data(db)
 
@@ -40,6 +44,10 @@ async def test_ensure_default_data_only_commits_when_entities_already_exist() ->
         patch("app.services.bootstrap.hash_password") as hash_password,
         patch("app.services.bootstrap.project_repo.get_by_name", new_callable=AsyncMock, return_value=object()),
         patch("app.services.bootstrap.user_repo.get_by_username", new_callable=AsyncMock, return_value=object()),
+        patch(
+            "app.services.bootstrap.provider_service.ensure_default_local_provider",
+            new_callable=AsyncMock,
+        ),
     ):
         await ensure_default_data(db)
 

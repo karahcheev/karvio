@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     session_cookie_name: str = "tms_session"
     session_cookie_secure: bool = True
     session_cookie_same_site: str = "lax"
+    # Public base URL the identity provider redirects back to. When empty the
+    # callback URL is derived from the incoming request base URL.
+    auth_oidc_redirect_base_url: str = ""
     attachment_storage_driver: str = "localstorage"
     attachment_local_root: str = "/app/data/attachments"
     performance_artifact_root: str = "/app/data/performance_artifacts"

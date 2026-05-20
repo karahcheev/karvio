@@ -8,6 +8,12 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class LdapLoginRequest(BaseModel):
+    provider_id: str = Field(min_length=1, max_length=64)
+    username: str = Field(min_length=1, max_length=256)
+    password: str = Field(min_length=1, max_length=512)
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
