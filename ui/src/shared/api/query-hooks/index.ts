@@ -5,4 +5,5 @@ export * from "./test-runs";
 export * from "./test-plans-milestones";
 export * from "./test-datasets-environments";
 export * from "./jira";
+export * from "./auth-providers";
 export * from "./products-components";

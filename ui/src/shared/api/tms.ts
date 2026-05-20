@@ -1,6 +1,7 @@
 export * from "./tms/types";
 export * from "./tms/helpers";
 export * from "./tms/auth";
+export * from "./tms/auth-providers";
 export * from "./tms/api-keys";
 export * from "./tms/attachments";
 export * from "./tms/projects";

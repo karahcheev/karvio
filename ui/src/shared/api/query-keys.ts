@@ -2,6 +2,7 @@ export const queryKeys = {
   auth: {
     all: ["auth"] as const,
     me: ["auth", "me"] as const,
+    config: ["auth", "config"] as const,
   },
   apiKeys: {
     all: ["api-keys"] as const,
@@ -22,6 +23,8 @@ export const queryKeys = {
     aiOverview: ["settings", "ai", "overview"] as const,
     aiGlobal: ["settings", "ai", "global"] as const,
     ai: (projectId: string) => ["settings", "ai", projectId] as const,
+    authProviders: ["settings", "auth", "providers"] as const,
+    authProvider: (providerId: string) => ["settings", "auth", "providers", providerId] as const,
   },
   projects: {
     all: ["projects"] as const,

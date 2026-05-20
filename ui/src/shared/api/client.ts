@@ -1,6 +1,8 @@
 import { clearSession } from "@/shared/auth";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+/** Absolute API base, used for full-page redirects (e.g. OIDC authorization). */
+export const API_BASE_URL = API_BASE;
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
 type ProblemResponse = {
