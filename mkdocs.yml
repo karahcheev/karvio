@@ -95,6 +95,7 @@ nav:
   - Project & Users:
       - Projects: user-guide/project-users/projects.md
       - Users: user-guide/project-users/users.md
+      - Authentication Providers: user-guide/project-users/auth-providers.md
   - Notifications:
       - user-guide/notifications/index.md
       - Email: user-guide/notifications/email.md
