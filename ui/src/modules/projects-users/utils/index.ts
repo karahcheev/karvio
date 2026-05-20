@@ -16,6 +16,7 @@ export type UserEditDraft = {
   lastName: string;
   email: string;
   team: string;
+  role: "user" | "admin";
 };
 
 export function toUserEditDraft(user: UserDto): UserEditDraft {
@@ -25,11 +26,12 @@ export function toUserEditDraft(user: UserDto): UserEditDraft {
     lastName: user.last_name ?? "",
     email: user.email ?? "",
     team: user.team ?? "",
+    role: user.role,
   };
 }
 
 export type ProjectColumn = "project" | "id" | "members" | "created";
-export type UserColumn = "id" | "user" | "email" | "team" | "projects" | "status" | "last_login" | "created" | "updated";
+export type UserColumn = "id" | "user" | "email" | "team" | "role" | "projects" | "status" | "last_login" | "created" | "updated";
 
 export function mapProjectSorting(column: ProjectColumn): ProjectsSortBy {
   switch (column) {
@@ -49,6 +51,7 @@ export function mapUserSorting(column: UserColumn): UsersSortBy {
     case "id":
       return "id";
     case "user":
+    case "role":
       return "username";
     case "email":
       return "email";

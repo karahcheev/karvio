@@ -46,6 +46,7 @@ export async function createUser(payload: {
   last_name?: string | null;
   email?: string | null;
   team?: string | null;
+  role?: "user" | "admin";
 }): Promise<UserDto> {
   return apiRequest<UserDto>("/users", {
     method: "POST",
@@ -66,6 +67,7 @@ export async function patchUser(
     email?: string | null;
     team?: string | null;
     is_enabled?: boolean;
+    role?: "user" | "admin";
   }
 ): Promise<UserDto> {
   return apiRequest<UserDto>(`/users/${userId}`, {

@@ -43,12 +43,15 @@ type UserDetailsPanelProfileSectionProps = Readonly<{
   editLastName: string;
   editTeam: string;
   editUsername: string;
+  editRole: "user" | "admin";
+  canManageRole: boolean;
   isEditMode: boolean;
   onEditEmailChange: (value: string) => void;
   onEditFirstNameChange: (value: string) => void;
   onEditLastNameChange: (value: string) => void;
   onEditTeamChange: (value: string) => void;
   onEditUsernameChange: (value: string) => void;
+  onEditRoleChange: (value: "user" | "admin") => void;
   user: UserDto;
 }>;
 
@@ -58,12 +61,15 @@ function UserDetailsPanelProfileSection({
   editLastName,
   editTeam,
   editUsername,
+  editRole,
+  canManageRole,
   isEditMode,
   onEditEmailChange,
   onEditFirstNameChange,
   onEditLastNameChange,
   onEditTeamChange,
   onEditUsernameChange,
+  onEditRoleChange,
   user,
 }: UserDetailsPanelProfileSectionProps) {
   if (isEditMode) {
@@ -125,6 +131,19 @@ function UserDetailsPanelProfileSection({
             onChange={(event) => onEditUsernameChange(event.target.value)}
             placeholder="e.g. john.doe"
           />
+          {canManageRole ? (
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-[var(--muted-foreground)]">Role</span>
+              <select
+                value={editRole}
+                onChange={(event) => onEditRoleChange(event.target.value as "user" | "admin")}
+                className="rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm focus:border-[var(--highlight-border)] focus:outline-none focus:ring-1 focus:ring-[var(--control-focus-ring)]"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+          ) : null}
         </SidePanelCard>
       </div>
     );
@@ -137,6 +156,7 @@ function UserDetailsPanelProfileSection({
         { label: "Email", value: user.email },
         { label: "Username", value: user.username },
         { label: "Team", value: user.team },
+        { label: "Role", value: user.role === "admin" ? "Admin" : "User" },
         {
           label: "Created",
           value: new Date(user.created_at).toLocaleString(),
@@ -162,6 +182,8 @@ type NewUserPanelProps = Readonly<{
   newUserName: string;
   newUserPassword: string;
   newUserTeam: string;
+  newUserRole: "user" | "admin";
+  canManageRole: boolean;
   onAddUser: () => void;
   onClose: () => void;
   onUserEmailChange: (value: string) => void;
@@ -170,6 +192,7 @@ type NewUserPanelProps = Readonly<{
   onUserNameChange: (value: string) => void;
   onUserPasswordChange: (value: string) => void;
   onUserTeamChange: (value: string) => void;
+  onUserRoleChange: (value: "user" | "admin") => void;
   userCreateError: string | null;
 }>;
 
@@ -181,6 +204,8 @@ export function NewUserPanel({
   newUserName,
   newUserPassword,
   newUserTeam,
+  newUserRole,
+  canManageRole,
   onAddUser,
   onClose,
   onUserEmailChange,
@@ -189,6 +214,7 @@ export function NewUserPanel({
   onUserNameChange,
   onUserPasswordChange,
   onUserTeamChange,
+  onUserRoleChange,
   userCreateError,
 }: NewUserPanelProps) {
   return (
@@ -255,6 +281,19 @@ export function NewUserPanel({
               onChange={(event) => onUserTeamChange(event.target.value)}
               placeholder="e.g. QA"
             />
+            {canManageRole ? (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-[var(--muted-foreground)]">Role</span>
+                <select
+                  value={newUserRole}
+                  onChange={(event) => onUserRoleChange(event.target.value as "user" | "admin")}
+                  className="rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm focus:border-[var(--highlight-border)] focus:outline-none focus:ring-1 focus:ring-[var(--control-focus-ring)]"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </label>
+            ) : null}
             <TextField
               label="Username"
               required
@@ -290,6 +329,8 @@ type UserDetailsPanelProps = Readonly<{
   editLastName: string;
   editTeam: string;
   editUsername: string;
+  editRole: "user" | "admin";
+  canManageRole: boolean;
   isEditMode: boolean;
   isSaveDisabled: boolean;
   isSavingUser: boolean;
@@ -302,6 +343,7 @@ type UserDetailsPanelProps = Readonly<{
   onEditLastNameChange: (value: string) => void;
   onEditTeamChange: (value: string) => void;
   onEditUsernameChange: (value: string) => void;
+  onEditRoleChange: (value: "user" | "admin") => void;
   onOpenResetPassword: (user: UserDto) => void;
   onSaveUser: () => void;
   onStartEdit: () => void;
@@ -317,6 +359,8 @@ export function UserDetailsPanel({
   editLastName,
   editTeam,
   editUsername,
+  editRole,
+  canManageRole,
   isEditMode,
   isSaveDisabled,
   isSavingUser,
@@ -329,6 +373,7 @@ export function UserDetailsPanel({
   onEditLastNameChange,
   onEditTeamChange,
   onEditUsernameChange,
+  onEditRoleChange,
   onOpenResetPassword,
   onSaveUser,
   onStartEdit,
@@ -426,12 +471,15 @@ export function UserDetailsPanel({
           editLastName={editLastName}
           editTeam={editTeam}
           editUsername={editUsername}
+          editRole={editRole}
+          canManageRole={canManageRole}
           isEditMode={isEditMode}
           onEditEmailChange={onEditEmailChange}
           onEditFirstNameChange={onEditFirstNameChange}
           onEditLastNameChange={onEditLastNameChange}
           onEditTeamChange={onEditTeamChange}
           onEditUsernameChange={onEditUsernameChange}
+          onEditRoleChange={onEditRoleChange}
           user={user}
         />
       </DetailsSection>

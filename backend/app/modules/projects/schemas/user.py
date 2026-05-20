@@ -13,6 +13,7 @@ class UserCreate(BaseModel):
     last_name: str | None = Field(default=None, max_length=100)
     email: str | None = Field(default=None, max_length=255)
     team: str | None = Field(default=None, max_length=255)
+    role: UserRole | None = None
 
     model_config = {"extra": "forbid"}
 
@@ -29,6 +30,7 @@ class UserPatch(BaseModel):
     email: str | None = Field(default=None, max_length=255)
     team: str | None = Field(default=None, max_length=255)
     is_enabled: bool | None = None
+    role: UserRole | None = None
 
     model_config = {"extra": "forbid"}
 

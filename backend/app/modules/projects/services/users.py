@@ -190,6 +190,8 @@ async def create_user(db: AsyncSession, payload: UserCreate, *, current_user: Us
         team=_normalize_optional_text(payload.team),
         password_hash=hash_password(payload.password),
     )
+    if payload.role is not None:
+        user.role = payload.role
     db.add(user)
     await audit_service.queue_create_event(
         db,
@@ -248,6 +250,33 @@ async def patch_user(db: AsyncSession, *, user_id: str, payload: UserPatch, curr
                 detail="Default admin user cannot be disabled",
             )
         user.is_enabled = patch_data["is_enabled"]
+
+    if "role" in patch_data:
+        if patch_data["role"] is None:
+            raise DomainError(
+                status_code=422,
+                code="invalid_user_role",
+                title=TITLE_INVALID_REQUEST,
+                detail="role cannot be null",
+                errors={"role": ["role cannot be null"]},
+            )
+        await _ensure_admin(current_user, action="update user role")
+        next_role = UserRole(patch_data["role"])
+        if user.username == ADMIN_USERNAME and next_role != UserRole.admin:
+            raise DomainError(
+                status_code=403,
+                code="default_admin_protected",
+                title="Forbidden",
+                detail="Default admin role cannot be changed",
+            )
+        if current_user.id == user.id and next_role != UserRole.admin:
+            raise DomainError(
+                status_code=403,
+                code="cannot_demote_self",
+                title="Forbidden",
+                detail="Admins cannot demote themselves",
+            )
+        user.role = next_role
 
     if "username" in patch_data:
         user.username = next_username
