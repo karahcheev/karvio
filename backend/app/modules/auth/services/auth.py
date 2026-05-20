@@ -14,8 +14,10 @@ from app.core.domain_strings import (
 from app.core.errors import DomainError
 from app.core.metrics import record_use_case
 from app.core.security import create_access_token, hash_password, verify_password
+from app.models.enums import UserRole
 from app.modules.auth import presenters as auth_presenters
 from app.modules.auth.repositories import auth as auth_repo
+from app.modules.auth.services import providers as provider_service
 from app.modules.auth.schemas.auth import LoginRequest, TokenResponse
 from app.modules.projects.models import User
 from app.modules.projects.schemas.user import UserPasswordChangeRequest
@@ -71,6 +73,7 @@ async def login(db: AsyncSession, payload: LoginRequest) -> TokenResponse:
             title="Forbidden",
             detail="User account is disabled",
         )
+    await provider_service.assert_local_login_allowed(db, user_is_admin=user.role == UserRole.admin)
     before_state = audit_service.snapshot_entity(user)
     user.last_login_at = datetime.now(timezone.utc)
     await audit_service.queue_update_event(

@@ -318,4 +318,4 @@ async def delete_user(db: AsyncSession, *, user_id: str, current_user: User) -> 
         resource_id=user.id,
         before=before_state,
     )
-    db.delete(user)
+    await db.delete(user)

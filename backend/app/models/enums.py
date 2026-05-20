@@ -129,6 +129,14 @@ class UserRole(str, enum.Enum):
     admin = "admin"
 
 
+class AuthProviderType(str, enum.Enum):
+    local = "local"
+    ldap = "ldap"
+    oidc = "oidc"
+    google = "google"
+    azure = "azure"
+
+
 class AuditActorType(str, enum.Enum):
     user = "user"
     system = "system"
