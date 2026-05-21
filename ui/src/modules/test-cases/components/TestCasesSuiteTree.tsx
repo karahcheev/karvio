@@ -1,11 +1,12 @@
 // Collapsible suite tree with create/delete and selection.
 import { Check, ChevronDown, ChevronLeft, ChevronRight, FolderTree, Pencil, Plus, Trash2, X } from "lucide-react";
-import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useState, type Dispatch, type DragEvent, type SetStateAction } from "react";
 import type { SuiteNode } from "./types";
 import { filterSuitesForSearch } from "../lib/suite-tree.utils";
 import { Button, SearchField } from "@/shared/ui";
 
 const MAX_SUITE_DEPTH = 4;
+const SUITE_DRAG_MIME = "application/x-karvio-suite-id";
 
 type Props = Readonly<{
   suites: SuiteNode[];
@@ -31,6 +32,7 @@ type Props = Readonly<{
   onEditSuiteClick: (suiteId: string) => void;
   onConfirmEditSuite: () => void;
   onCancelEditSuite: () => void;
+  onMoveSuite: (suiteId: string, newParentId: string | null) => void;
 }>;
 
 export function TestCasesSuiteTree({
@@ -57,8 +59,11 @@ export function TestCasesSuiteTree({
   onEditSuiteClick,
   onConfirmEditSuite,
   onCancelEditSuite,
+  onMoveSuite,
 }: Props) {
   const [suiteSearchQuery, setSuiteSearchQuery] = useState("");
+  const [draggingSuiteId, setDraggingSuiteId] = useState<string | null>(null);
+  const [dropTargetSuiteId, setDropTargetSuiteId] = useState<string | null | "root">(null);
   const isSuiteSearchActive = suiteSearchQuery.trim().length > 0;
   const filteredSuites = useMemo(
     () => filterSuitesForSearch(suites, suiteSearchQuery),
@@ -108,8 +113,28 @@ export function TestCasesSuiteTree({
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             <div
+              onDragOver={(event) => {
+                if (!draggingSuiteId) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                setDropTargetSuiteId("root");
+              }}
+              onDragLeave={() => {
+                setDropTargetSuiteId((current) => (current === "root" ? null : current));
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const suiteId = event.dataTransfer.getData(SUITE_DRAG_MIME) || draggingSuiteId;
+                setDropTargetSuiteId(null);
+                setDraggingSuiteId(null);
+                if (suiteId) onMoveSuite(suiteId, null);
+              }}
               className={`group mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-                selectedSuite === null ? "bg-[var(--highlight-bg-soft)] text-[var(--highlight-foreground)]" : "text-[var(--foreground)] hover:bg-[var(--muted)]"
+                dropTargetSuiteId === "root"
+                  ? "bg-[var(--tone-success-bg)] outline outline-2 outline-[var(--status-passed)]"
+                  : selectedSuite === null
+                  ? "bg-[var(--highlight-bg-soft)] text-[var(--highlight-foreground)]"
+                  : "text-[var(--foreground)] hover:bg-[var(--muted)]"
               }`}
             >
               <Button unstyled
@@ -167,6 +192,11 @@ export function TestCasesSuiteTree({
                 onEditSuiteClick={onEditSuiteClick}
                 onConfirmEditSuite={onConfirmEditSuite}
                 onCancelEditSuite={onCancelEditSuite}
+                draggingSuiteId={draggingSuiteId}
+                setDraggingSuiteId={setDraggingSuiteId}
+                dropTargetSuiteId={dropTargetSuiteId}
+                setDropTargetSuiteId={setDropTargetSuiteId}
+                onMoveSuite={onMoveSuite}
               />
             ))}
 
@@ -221,6 +251,11 @@ type SuiteTreeNodeProps = Readonly<{
   onEditSuiteClick: (suiteId: string) => void;
   onConfirmEditSuite: () => void;
   onCancelEditSuite: () => void;
+  draggingSuiteId: string | null;
+  setDraggingSuiteId: Dispatch<SetStateAction<string | null>>;
+  dropTargetSuiteId: string | null | "root";
+  setDropTargetSuiteId: Dispatch<SetStateAction<string | null | "root">>;
+  onMoveSuite: (suiteId: string, newParentId: string | null) => void;
 }>;
 
 function SuiteTreeNode({
@@ -246,12 +281,49 @@ function SuiteTreeNode({
   onEditSuiteClick,
   onConfirmEditSuite,
   onCancelEditSuite,
+  draggingSuiteId,
+  setDraggingSuiteId,
+  dropTargetSuiteId,
+  setDropTargetSuiteId,
+  onMoveSuite,
 }: SuiteTreeNodeProps) {
   const children = childrenByParent.get(suite.id) ?? [];
   const hasChildren = children.length > 0;
   const isExpanded = isSuiteSearchActive || expandedSuites.has(suite.id);
   const canCreateChildSuite = suite.depth < MAX_SUITE_DEPTH;
   const isEditing = editingSuiteId === suite.id;
+  const isDropTarget = dropTargetSuiteId === suite.id && draggingSuiteId !== null && draggingSuiteId !== suite.id;
+  const isDraggingSelf = draggingSuiteId === suite.id;
+
+  const handleDragStart = (event: DragEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData(SUITE_DRAG_MIME, suite.id);
+    event.dataTransfer.setData("text/plain", suite.id);
+    setDraggingSuiteId(suite.id);
+  };
+  const handleDragEnd = () => {
+    setDraggingSuiteId(null);
+    setDropTargetSuiteId(null);
+  };
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (!draggingSuiteId || draggingSuiteId === suite.id) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "move";
+    setDropTargetSuiteId(suite.id);
+  };
+  const handleDragLeave = () => {
+    setDropTargetSuiteId((current) => (current === suite.id ? null : current));
+  };
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const suiteId = event.dataTransfer.getData(SUITE_DRAG_MIME) || draggingSuiteId;
+    setDropTargetSuiteId(null);
+    setDraggingSuiteId(null);
+    if (suiteId && suiteId !== suite.id) onMoveSuite(suiteId, suite.id);
+  };
 
   if (isEditing) {
     return (
@@ -289,6 +361,11 @@ function SuiteTreeNode({
                 onEditSuiteClick={onEditSuiteClick}
                 onConfirmEditSuite={onConfirmEditSuite}
                 onCancelEditSuite={onCancelEditSuite}
+                draggingSuiteId={draggingSuiteId}
+                setDraggingSuiteId={setDraggingSuiteId}
+                dropTargetSuiteId={dropTargetSuiteId}
+                setDropTargetSuiteId={setDropTargetSuiteId}
+                onMoveSuite={onMoveSuite}
               />
             ))}
           </div>
@@ -300,8 +377,20 @@ function SuiteTreeNode({
   return (
     <div>
       <div
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-          selectedSuite === suite.id ? "bg-[var(--highlight-bg-soft)] text-[var(--highlight-foreground)]" : "text-[var(--foreground)] hover:bg-[var(--muted)]"
+          isDraggingSelf ? "opacity-50" : ""
+        } ${
+          isDropTarget
+            ? "bg-[var(--tone-success-bg)] outline outline-2 outline-[var(--status-passed)]"
+            : selectedSuite === suite.id
+            ? "bg-[var(--highlight-bg-soft)] text-[var(--highlight-foreground)]"
+            : "text-[var(--foreground)] hover:bg-[var(--muted)]"
         }`}
       >
         <Button
@@ -405,6 +494,11 @@ function SuiteTreeNode({
               onEditSuiteClick={onEditSuiteClick}
               onConfirmEditSuite={onConfirmEditSuite}
               onCancelEditSuite={onCancelEditSuite}
+              draggingSuiteId={draggingSuiteId}
+              setDraggingSuiteId={setDraggingSuiteId}
+              dropTargetSuiteId={dropTargetSuiteId}
+              setDropTargetSuiteId={setDropTargetSuiteId}
+              onMoveSuite={onMoveSuite}
             />
           ))}
         </div>
