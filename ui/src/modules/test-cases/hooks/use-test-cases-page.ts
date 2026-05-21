@@ -197,6 +197,7 @@ export function useTestCasesPage() {
       onEditSuiteClick: suiteTree.onEditSuiteClick,
       onConfirmEditSuite: () => void suiteTree.onConfirmEditSuite(),
       onCancelEditSuite: suiteTree.onCancelEditSuite,
+      onMoveSuite: (suiteId: string, newParentId: string | null) => void suiteTree.onMoveSuite(suiteId, newParentId),
     },
     list: {
       isLoading: listLoading,

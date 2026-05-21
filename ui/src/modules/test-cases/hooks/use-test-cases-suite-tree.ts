@@ -195,6 +195,57 @@ export function useTestCasesSuiteTree(params: UseTestCasesSuiteTreeParams) {
     setNewSuiteInputValue("");
   }, []);
 
+  const handleMoveSuite = useCallback(
+    async (suiteId: string, newParentId: string | null) => {
+      const suite = suites.find((item) => item.id === suiteId);
+      if (!suite) return;
+      const currentParent = suite.parent ?? null;
+      if (currentParent === newParentId) return;
+      if (newParentId === suiteId) return;
+      if (newParentId && suiteMeta.getDescendants(suiteId).has(newParentId)) {
+        notifyError("Cannot move a suite into one of its own descendants.", "Failed to move suite.");
+        return;
+      }
+      if (newParentId) {
+        const parentDepth = suiteMeta.getDepth(newParentId);
+        const branchDepth = (() => {
+          let max = 0;
+          const stack: Array<{ id: string; depth: number }> = [{ id: suiteId, depth: 0 }];
+          while (stack.length > 0) {
+            const node = stack.pop();
+            if (!node) break;
+            if (node.depth > max) max = node.depth;
+            for (const child of suites.filter((item) => item.parent === node.id)) {
+              stack.push({ id: child.id, depth: node.depth + 1 });
+            }
+          }
+          return max;
+        })();
+        if (parentDepth + 1 + branchDepth > MAX_SUITE_DEPTH) {
+          notifyError(`Suite nesting is limited to ${MAX_SUITE_DEPTH} levels.`, "Failed to move suite.");
+          return;
+        }
+      }
+      try {
+        const updated = await patchSuiteMutation.mutateAsync({
+          suiteId,
+          payload: { parent_id: newParentId },
+        });
+        if (newParentId) {
+          setExpandedSuites((prev) => {
+            const next = new Set(prev);
+            next.add(newParentId);
+            return next;
+          });
+        }
+        notifySuccess(`Suite "${updated.name}" moved`);
+      } catch (error) {
+        notifyError(error, "Failed to move suite.");
+      }
+    },
+    [patchSuiteMutation, suiteMeta, suites],
+  );
+
   const handleDeleteSuite = useCallback(
     async (suiteId: string) => {
       if (!isAdmin) {
@@ -248,5 +299,6 @@ export function useTestCasesSuiteTree(params: UseTestCasesSuiteTreeParams) {
     onEditSuiteClick: handleEditSuiteClick,
     onConfirmEditSuite: handleConfirmEditSuite,
     onCancelEditSuite: handleCancelEditSuite,
+    onMoveSuite: handleMoveSuite,
   };
 }
