@@ -1,5 +1,5 @@
 // Collapsible suite tree with create/delete and selection.
-import { Check, ChevronDown, ChevronLeft, ChevronRight, FolderTree, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, FolderTree, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { SuiteNode } from "./types";
 import { filterSuitesForSearch } from "../lib/suite-tree.utils";
@@ -25,6 +25,12 @@ type Props = Readonly<{
   canDeleteSuites: boolean;
   onCreateSuite: () => void;
   onCancelNewSuite: () => void;
+  editingSuiteId: string | null;
+  editSuiteInputValue: string;
+  setEditSuiteInputValue: Dispatch<SetStateAction<string>>;
+  onEditSuiteClick: (suiteId: string) => void;
+  onConfirmEditSuite: () => void;
+  onCancelEditSuite: () => void;
 }>;
 
 export function TestCasesSuiteTree({
@@ -45,6 +51,12 @@ export function TestCasesSuiteTree({
   canDeleteSuites,
   onCreateSuite,
   onCancelNewSuite,
+  editingSuiteId,
+  editSuiteInputValue,
+  setEditSuiteInputValue,
+  onEditSuiteClick,
+  onConfirmEditSuite,
+  onCancelEditSuite,
 }: Props) {
   const [suiteSearchQuery, setSuiteSearchQuery] = useState("");
   const isSuiteSearchActive = suiteSearchQuery.trim().length > 0;
@@ -149,6 +161,12 @@ export function TestCasesSuiteTree({
                 canDeleteSuites={canDeleteSuites}
                 onCreateSuite={onCreateSuite}
                 onCancelNewSuite={onCancelNewSuite}
+                editingSuiteId={editingSuiteId}
+                editSuiteInputValue={editSuiteInputValue}
+                setEditSuiteInputValue={setEditSuiteInputValue}
+                onEditSuiteClick={onEditSuiteClick}
+                onConfirmEditSuite={onConfirmEditSuite}
+                onCancelEditSuite={onCancelEditSuite}
               />
             ))}
 
@@ -197,6 +215,12 @@ type SuiteTreeNodeProps = Readonly<{
   canDeleteSuites: boolean;
   onCreateSuite: () => void;
   onCancelNewSuite: () => void;
+  editingSuiteId: string | null;
+  editSuiteInputValue: string;
+  setEditSuiteInputValue: Dispatch<SetStateAction<string>>;
+  onEditSuiteClick: (suiteId: string) => void;
+  onConfirmEditSuite: () => void;
+  onCancelEditSuite: () => void;
 }>;
 
 function SuiteTreeNode({
@@ -216,11 +240,62 @@ function SuiteTreeNode({
   canDeleteSuites,
   onCreateSuite,
   onCancelNewSuite,
+  editingSuiteId,
+  editSuiteInputValue,
+  setEditSuiteInputValue,
+  onEditSuiteClick,
+  onConfirmEditSuite,
+  onCancelEditSuite,
 }: SuiteTreeNodeProps) {
   const children = childrenByParent.get(suite.id) ?? [];
   const hasChildren = children.length > 0;
   const isExpanded = isSuiteSearchActive || expandedSuites.has(suite.id);
   const canCreateChildSuite = suite.depth < MAX_SUITE_DEPTH;
+  const isEditing = editingSuiteId === suite.id;
+
+  if (isEditing) {
+    return (
+      <div>
+        <SuiteInputRow
+          value={editSuiteInputValue}
+          setValue={setEditSuiteInputValue}
+          onConfirm={onConfirmEditSuite}
+          onCancel={onCancelEditSuite}
+        />
+        {hasChildren && isExpanded && (
+          <div className="ml-4">
+            {children.map((childSuite) => (
+              <SuiteTreeNode
+                key={childSuite.id}
+                suite={childSuite}
+                childrenByParent={childrenByParent}
+                isSuiteSearchActive={isSuiteSearchActive}
+                selectedSuite={selectedSuite}
+                expandedSuites={expandedSuites}
+                isCreatingNewSuite={isCreatingNewSuite}
+                creatingSuiteParentId={creatingSuiteParentId}
+                newSuiteInputValue={newSuiteInputValue}
+                setNewSuiteInputValue={setNewSuiteInputValue}
+                onSelectSuite={onSelectSuite}
+                onToggleSuite={onToggleSuite}
+                onNewSuiteClick={onNewSuiteClick}
+                onDeleteSuite={onDeleteSuite}
+                canDeleteSuites={canDeleteSuites}
+                onCreateSuite={onCreateSuite}
+                onCancelNewSuite={onCancelNewSuite}
+                editingSuiteId={editingSuiteId}
+                editSuiteInputValue={editSuiteInputValue}
+                setEditSuiteInputValue={setEditSuiteInputValue}
+                onEditSuiteClick={onEditSuiteClick}
+                onConfirmEditSuite={onConfirmEditSuite}
+                onCancelEditSuite={onCancelEditSuite}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -265,6 +340,17 @@ function SuiteTreeNode({
                   <Plus className="h-4 w-4" />
                 </Button>
               )}
+              <Button
+                unstyled
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditSuiteClick(suite.id);
+                }}
+                className="rounded p-1 text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
+                aria-label="Edit suite"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
               {canDeleteSuites ? (
                 <Button
                   unstyled
@@ -313,6 +399,12 @@ function SuiteTreeNode({
               canDeleteSuites={canDeleteSuites}
               onCreateSuite={onCreateSuite}
               onCancelNewSuite={onCancelNewSuite}
+              editingSuiteId={editingSuiteId}
+              editSuiteInputValue={editSuiteInputValue}
+              setEditSuiteInputValue={setEditSuiteInputValue}
+              onEditSuiteClick={onEditSuiteClick}
+              onConfirmEditSuite={onConfirmEditSuite}
+              onCancelEditSuite={onCancelEditSuite}
             />
           ))}
         </div>
