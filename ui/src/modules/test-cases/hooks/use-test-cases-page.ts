@@ -191,6 +191,12 @@ export function useTestCasesPage() {
       canDeleteSuites: suiteTree.canDeleteSuites,
       onCreateSuite: () => void suiteTree.onCreateSuite(projectId),
       onCancelNewSuite: suiteTree.onCancelNewSuite,
+      editingSuiteId: suiteTree.editingSuiteId,
+      editSuiteInputValue: suiteTree.editSuiteInputValue,
+      setEditSuiteInputValue: suiteTree.setEditSuiteInputValue,
+      onEditSuiteClick: suiteTree.onEditSuiteClick,
+      onConfirmEditSuite: () => void suiteTree.onConfirmEditSuite(),
+      onCancelEditSuite: suiteTree.onCancelEditSuite,
     },
     list: {
       isLoading: listLoading,

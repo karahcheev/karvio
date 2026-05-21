@@ -15,6 +15,7 @@ import {
   getTestCaseSteps,
   getTestCases,
   getTestCasesPage,
+  patchSuite,
   patchTestCase,
   replaceTestCaseSteps,
   reviewAiTestCase,
@@ -236,6 +237,21 @@ export function useCreateSuiteMutation() {
       await invalidateGroups(queryClient, [
         queryKeys.suites.byProject(variables.project_id),
         queryKeys.testCases.byProject(variables.project_id),
+      ]);
+    },
+  });
+}
+
+export function usePatchSuiteMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ suiteId, payload }: { suiteId: string; payload: Parameters<typeof patchSuite>[1] }) =>
+      patchSuite(suiteId, payload),
+    onSuccess: async (data) => {
+      await invalidateGroups(queryClient, [
+        queryKeys.suites.byProject(data.project_id),
+        queryKeys.testCases.byProject(data.project_id),
       ]);
     },
   });

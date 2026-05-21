@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { useCreateSuiteMutation, useDeleteSuiteMutation } from "@/shared/api";
+import { useCreateSuiteMutation, useDeleteSuiteMutation, usePatchSuiteMutation } from "@/shared/api";
 import { getSessionUser } from "@/shared/auth/session";
 import { useDeleteConfirmation } from "@/shared/lib/use-delete-confirmation";
 import { notifyError, notifySuccess } from "@/shared/lib/notifications";
@@ -25,6 +25,7 @@ export function useTestCasesSuiteTree(params: UseTestCasesSuiteTreeParams) {
   const { confirmDelete } = useDeleteConfirmation();
 
   const createSuiteMutation = useCreateSuiteMutation();
+  const patchSuiteMutation = usePatchSuiteMutation();
   const deleteSuiteMutation = useDeleteSuiteMutation();
   const isAdmin = getSessionUser()?.role === "admin";
 
@@ -40,6 +41,8 @@ export function useTestCasesSuiteTree(params: UseTestCasesSuiteTreeParams) {
   const [isCreatingNewSuite, setIsCreatingNewSuite] = useState(false);
   const [creatingSuiteParentId, setCreatingSuiteParentId] = useState<string | null>(null);
   const [newSuiteInputValue, setNewSuiteInputValue] = useState("");
+  const [editingSuiteId, setEditingSuiteId] = useState<string | null>(null);
+  const [editSuiteInputValue, setEditSuiteInputValue] = useState("");
 
   useEffect(() => {
     const fromUrl = searchParams.get(SUITES_COLLAPSED_PARAM);
@@ -145,6 +148,47 @@ export function useTestCasesSuiteTree(params: UseTestCasesSuiteTreeParams) {
     [createSuiteMutation, creatingSuiteParentId, newSuiteInputValue],
   );
 
+  const handleEditSuiteClick = useCallback(
+    (suiteId: string) => {
+      const suite = suites.find((item) => item.id === suiteId);
+      if (!suite) return;
+      setIsCreatingNewSuite(false);
+      setCreatingSuiteParentId(null);
+      setNewSuiteInputValue("");
+      setEditingSuiteId(suiteId);
+      setEditSuiteInputValue(suite.name);
+    },
+    [suites],
+  );
+
+  const handleCancelEditSuite = useCallback(() => {
+    setEditingSuiteId(null);
+    setEditSuiteInputValue("");
+  }, []);
+
+  const handleConfirmEditSuite = useCallback(async () => {
+    if (!editingSuiteId) return;
+    const trimmed = editSuiteInputValue.trim();
+    if (!trimmed) return;
+    const suite = suites.find((item) => item.id === editingSuiteId);
+    if (suite && suite.name === trimmed) {
+      setEditingSuiteId(null);
+      setEditSuiteInputValue("");
+      return;
+    }
+    try {
+      const updated = await patchSuiteMutation.mutateAsync({
+        suiteId: editingSuiteId,
+        payload: { name: trimmed },
+      });
+      setEditingSuiteId(null);
+      setEditSuiteInputValue("");
+      notifySuccess(`Suite "${updated.name}" updated`);
+    } catch (error) {
+      notifyError(error, "Failed to update suite.");
+    }
+  }, [editSuiteInputValue, editingSuiteId, patchSuiteMutation, suites]);
+
   const handleCancelNewSuite = useCallback(() => {
     setIsCreatingNewSuite(false);
     setCreatingSuiteParentId(null);
@@ -198,5 +242,11 @@ export function useTestCasesSuiteTree(params: UseTestCasesSuiteTreeParams) {
     onCancelNewSuite: handleCancelNewSuite,
     onDeleteSuite: handleDeleteSuite,
     canDeleteSuites: isAdmin,
+    editingSuiteId,
+    editSuiteInputValue,
+    setEditSuiteInputValue,
+    onEditSuiteClick: handleEditSuiteClick,
+    onConfirmEditSuite: handleConfirmEditSuite,
+    onCancelEditSuite: handleCancelEditSuite,
   };
 }
