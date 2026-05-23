@@ -1,0 +1,159 @@
+name: Version bump
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - version.txt
+      - ui/package.json
+      - backend/pyproject.toml
+      - CHANGELOG.md
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Manual bump type"
+        required: true
+        default: major
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+permissions:
+  contents: write
+
+concurrency:
+  group: version-bump-main
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip if last commit is a bump
+        id: skip
+        run: |
+          msg=$(git log -1 --pretty=%s)
+          echo "Last commit: $msg"
+          if echo "$msg" | grep -q "\[skip ci\]"; then
+            echo "Bump commit detected — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine bump type
+        if: steps.skip.outputs.skip != 'true'
+        id: bump_type
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_BUMP: ${{ github.event.inputs.bump }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Manual dispatch: $MANUAL_BUMP"
+            echo "type=$MANUAL_BUMP" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          sha="${{ github.sha }}"
+          # Find a merged PR whose merge commit equals this SHA.
+          pr_json=$(gh api "repos/${{ github.repository }}/commits/${sha}/pulls" \
+            --jq '[.[] | select(.merged_at != null)] | first')
+
+          if [ -z "$pr_json" ] || [ "$pr_json" = "null" ]; then
+            echo "Direct push to main — bumping patch."
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          head_ref=$(echo "$pr_json" | jq -r '.head.ref')
+          echo "Merged PR source branch: $head_ref"
+
+          case "$head_ref" in
+            feature/*)
+              echo "type=minor" >> "$GITHUB_OUTPUT" ;;
+            fix/*|hotfix/*)
+              echo "type=patch" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::error::Merged PR branch '$head_ref' has no recognized prefix. This should have been blocked by validate-branch-name."
+              exit 1 ;;
+          esac
+
+      - name: Compute new version
+        if: steps.skip.outputs.skip != 'true'
+        id: version
+        env:
+          BUMP: ${{ steps.bump_type.outputs.type }}
+        run: |
+          set -euo pipefail
+          current=$(tr -d '[:space:]' < version.txt)
+          IFS='.' read -r major minor patch <<<"$current"
+          case "$BUMP" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+          new="${major}.${minor}.${patch}"
+          echo "Current: $current  →  New: $new  ($BUMP)"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+
+      - name: Apply version to files
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          NEW: ${{ steps.version.outputs.new }}
+        run: |
+          set -euo pipefail
+          echo "$NEW" > version.txt
+
+          # ui/package.json — only the top-level "version" field.
+          python3 - <<'PY'
+          import json, os, pathlib
+          new = os.environ["NEW"]
+          p = pathlib.Path("ui/package.json")
+          data = json.loads(p.read_text())
+          data["version"] = new
+          p.write_text(json.dumps(data, indent=2) + "\n")
+          PY
+
+          # backend/pyproject.toml — only the [project] version line.
+          python3 - <<'PY'
+          import os, re, pathlib
+          new = os.environ["NEW"]
+          p = pathlib.Path("backend/pyproject.toml")
+          text = p.read_text()
+          text = re.sub(
+              r'(?m)^(version\s*=\s*")[^"]+(")',
+              lambda m: f'{m.group(1)}{new}{m.group(2)}',
+              text,
+              count=1,
+          )
+          p.write_text(text)
+          PY
+
+      - name: Commit, tag and push
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          NEW: ${{ steps.version.outputs.new }}
+          BUMP: ${{ steps.bump_type.outputs.type }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add version.txt ui/package.json backend/pyproject.toml
+          git commit -m "chore(release): v${NEW} (${BUMP}) [skip ci]"
+          git tag "v${NEW}"
+          git push origin HEAD:main
+          git push origin "v${NEW}"
