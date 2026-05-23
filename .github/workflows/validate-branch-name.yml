@@ -1,0 +1,27 @@
+name: Validate branch name
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch prefix
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          echo "Source branch: $HEAD_REF"
+          case "$HEAD_REF" in
+            feature/*|fix/*|hotfix/*)
+              echo "OK: branch prefix is allowed."
+              ;;
+            *)
+              echo "::error::Branch '$HEAD_REF' must start with 'feature/', 'fix/' or 'hotfix/'."
+              echo "::error::Rename the branch before merging — version bump workflow relies on the prefix."
+              exit 1
+              ;;
+          esac
