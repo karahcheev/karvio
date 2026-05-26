@@ -1,6 +1,6 @@
 [project]
 name = "tms-backend"
-version = "1.0.1"
+version = "1.1.0"
 description = "Karvio backend API"
 requires-python = ">=3.11"
 dependencies = [
