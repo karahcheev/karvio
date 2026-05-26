@@ -1,7 +1,7 @@
 // Global header: branding, project switcher, notifications, user menu, and account modals.
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { Bell, BellOff, User, ChevronDown, LogOut, KeyRound, CheckCircle2, AlertCircle, X, Moon, Sun } from "lucide-react";
+import { Bell, BellOff, User, ChevronDown, LogOut, KeyRound, CheckCircle2, AlertCircle, X, Moon, Sun, ExternalLink } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { logout, useChangePasswordMutation, useProjectsQuery, useVersionQuery } from "@/shared/api";
@@ -34,6 +34,7 @@ export function Topbar() {
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false);
   const [showProductInfoModal, setShowProductInfoModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showApiKeysManagerModal, setShowApiKeysManagerModal] = useState(false);
@@ -46,6 +47,7 @@ export function Topbar() {
   const projectMenuRef = useRef<HTMLDivElement>(null);
   const notificationsMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const helpMenuRef = useRef<HTMLDivElement>(null);
 
   const { items, unreadCount, uiEnabled, setUiEnabled, markSeen, clear, dismissNotification } = useNotificationCenter();
   const { data: versionData, isLoading: isVersionLoading } = useVersionQuery(showProductInfoModal);
@@ -63,6 +65,7 @@ export function Topbar() {
   useOnClickOutside(projectMenuRef, () => setProjectMenuOpen(false), projectMenuOpen);
   useOnClickOutside(notificationsMenuRef, () => setNotificationsOpen(false), notificationsOpen);
   useOnClickOutside(userMenuRef, () => setUserMenuOpen(false), userMenuOpen);
+  useOnClickOutside(helpMenuRef, () => setHelpMenuOpen(false), helpMenuOpen);
 
   const currentProject = projects.find((p) => p.id === projectId);
   const showProjectSelector = projects.length > 0;
@@ -191,17 +194,46 @@ export function Topbar() {
           {isDarkTheme ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
 
-        <Button
-          unstyled
-          type="button"
-          onClick={() => setShowProductInfoModal(true)}
-          className="rounded-lg p-2 hover:bg-[var(--accent)]"
-          aria-label="Product info"
-        >
-          <span className="box-border flex h-5 w-5 items-center justify-center rounded-full border-solid border-[var(--muted-foreground)] text-xs font-semibold text-[var(--muted-foreground)] [border-width:calc(1.25rem*2/24)]">
-            ?
-          </span>
-        </Button>
+        <div ref={helpMenuRef} className="relative">
+          <Button
+            unstyled
+            type="button"
+            onClick={() => setHelpMenuOpen((prev) => !prev)}
+            className="rounded-lg p-2 hover:bg-[var(--accent)]"
+            aria-label="Help"
+          >
+            <span className="box-border flex h-5 w-5 items-center justify-center rounded-full border-solid border-[var(--muted-foreground)] text-xs font-semibold text-[var(--muted-foreground)] [border-width:calc(1.25rem*2/24)]">
+              ?
+            </span>
+          </Button>
+
+          {helpMenuOpen && (
+            <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg">
+              <div className="p-1">
+                <a
+                  href="https://docs.karvio.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setHelpMenuOpen(false)}
+                  className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-[var(--foreground)] transition-colors hover:bg-[var(--highlight-bg)] hover:text-[var(--highlight-foreground)]"
+                >
+                  <span>Documentation</span>
+                  <ExternalLink className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHelpMenuOpen(false);
+                    setShowProductInfoModal(true);
+                  }}
+                  className="block w-full rounded-md px-3 py-2 text-left text-sm text-[var(--foreground)] transition-colors hover:bg-[var(--highlight-bg)] hover:text-[var(--highlight-foreground)]"
+                >
+                  About
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div ref={notificationsMenuRef} className="relative">
           <Button
