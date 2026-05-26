@@ -1,6 +1,8 @@
 from functools import lru_cache
+from importlib.metadata import PackageNotFoundError, version as _package_version
+from pathlib import Path
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
@@ -9,11 +11,33 @@ def escape_configparser_interpolation(value: str) -> str:
     return value.replace("%", "%%")
 
 
+def _resolve_app_version() -> str:
+    """Resolve the running application version.
+
+    Single source of truth is ``version.txt`` at the repository root. The
+    ``version-bump`` GitHub workflow keeps ``version.txt``, ``backend/pyproject.toml``
+    and ``ui/package.json`` in sync, so at runtime we can read the version from
+    the installed package metadata (which originates from ``pyproject.toml``).
+    Falls back to reading ``version.txt`` directly when the package is not
+    installed (e.g. running tests from source without ``pip install -e .``).
+    """
+    try:
+        return _package_version("karvio-backend")
+    except PackageNotFoundError:
+        # backend/app/core/config.py -> repo root is three levels up.
+        version_file = Path(__file__).resolve().parents[3] / "version.txt"
+        if version_file.is_file():
+            value = version_file.read_text().strip()
+            if value:
+                return value
+        return "0.0.0+unknown"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=("config", ".env"), env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Qarvio API"
-    app_version: str = "1.0.0"
+    app_version: str = Field(default_factory=_resolve_app_version)
     api_prefix: str = "/api/v1"
     log_level: str = "INFO"
     log_json: bool = True

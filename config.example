@@ -5,8 +5,8 @@
 # Application
 # -----------------------------------------------------------------------------
 # APP_NAME=Karvio
-# APP_VERSION=1.0.0
 # API_PREFIX=/api/v1
+
 
 # Public HTTPS URL of your Karvio instance.
 # Also used as the default allowed CORS origin and in Jira issue links.
