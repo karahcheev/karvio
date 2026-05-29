@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.core.config import get_settings
 from app.core.security import create_access_token, hash_password, verify_password
@@ -9,6 +9,7 @@ from app.models.enums import ProjectMemberRole, RunItemStatus, TestCaseStatus, T
 from app.modules.environments.models import Environment, EnvironmentRevision
 from app.modules.projects.models import Project, ProjectMember, Suite, User
 from app.modules.attachments.models import Attachment
+from app.modules.products.models import Component, Product, TestCaseComponentCoverage
 from app.modules.test_cases.models import TestCase
 from app.modules.test_runs.models import RunCaseRow, RunItem, TestRun
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1228,6 +1229,89 @@ async def test_test_case_bulk_update_multi_field_single_request(client, db_sessi
     assert saved.status.value == "active"
     assert "multi" in saved.tags
     assert "keep" in saved.tags
+
+
+async def test_test_case_bulk_update_product_and_components(
+    client, db_session: AsyncSession, auth_user: User, auth_headers
+):
+    project = Project(id="proj_bulk_pc", name="Proj")
+    membership = ProjectMember(project_id=project.id, user_id=auth_user.id, role=ProjectMemberRole.lead)
+    product = Product(id="prod_bulk_pc", project_id=project.id, name="Checkout", key="CHK")
+    component_a = Component(id="comp_bulk_a", project_id=project.id, name="Cart", key="CART")
+    component_b = Component(id="comp_bulk_b", project_id=project.id, name="Payments", key="PAY")
+    tc_1 = TestCase(id="tc_bulk_pc_1", project_id=project.id, key="PC-TC-1", title="Case 1", tags=[])
+    tc_2 = TestCase(id="tc_bulk_pc_2", project_id=project.id, key="PC-TC-2", title="Case 2", tags=[])
+    db_session.add_all([project, membership])
+    await db_session.commit()
+    db_session.add_all([product, component_a, component_b, tc_1, tc_2])
+    await db_session.commit()
+    # tc_2 already covers component_a, so it must not be duplicated.
+    db_session.add(TestCaseComponentCoverage(test_case_id=tc_2.id, component_id=component_a.id))
+    project_id = project.id
+    product_id = product.id
+    component_a_id = component_a.id
+    component_b_id = component_b.id
+    await db_session.commit()
+
+    resp = await client.post(
+        "/api/v1/test-cases/bulk",
+        json={
+            "project_id": project_id,
+            "test_case_ids": ["tc_bulk_pc_1", "tc_bulk_pc_2"],
+            "action": "update",
+            "primary_product_id": product_id,
+            "component_ids": [component_a_id, component_b_id],
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["affected_count"] == 2
+
+    db_session.expire_all()
+    saved_1 = await session_get(db_session, TestCase, "tc_bulk_pc_1")
+    saved_2 = await session_get(db_session, TestCase, "tc_bulk_pc_2")
+    assert saved_1.primary_product_id == product_id
+    assert saved_2.primary_product_id == product_id
+
+    coverages = (
+        await session_scalar(
+            db_session,
+            select(func.count())
+            .select_from(TestCaseComponentCoverage)
+            .where(TestCaseComponentCoverage.test_case_id == "tc_bulk_pc_2"),
+        )
+    )
+    # component_a already covered + component_b added = 2 (no duplicate of component_a).
+    assert coverages == 2
+
+
+async def test_test_case_bulk_update_component_project_mismatch(
+    client, db_session: AsyncSession, auth_user: User, auth_headers
+):
+    project = Project(id="proj_bulk_pc_mismatch", name="Proj")
+    other_project = Project(id="proj_bulk_pc_other", name="Other")
+    membership = ProjectMember(project_id=project.id, user_id=auth_user.id, role=ProjectMemberRole.lead)
+    foreign_component = Component(
+        id="comp_bulk_foreign", project_id=other_project.id, name="Foreign", key="FGN"
+    )
+    tc = TestCase(id="tc_bulk_pc_mismatch", project_id=project.id, key="PCM-TC-1", title="Case", tags=[])
+    db_session.add_all([project, other_project, membership])
+    await db_session.commit()
+    db_session.add_all([foreign_component, tc])
+    await db_session.commit()
+
+    resp = await client.post(
+        "/api/v1/test-cases/bulk",
+        json={
+            "project_id": project.id,
+            "test_case_ids": ["tc_bulk_pc_mismatch"],
+            "action": "update",
+            "component_ids": ["comp_bulk_foreign"],
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["code"] == "component_project_mismatch"
 
 
 async def test_test_case_bulk_delete_removes_attachments(

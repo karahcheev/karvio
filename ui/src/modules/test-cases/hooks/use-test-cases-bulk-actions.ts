@@ -21,12 +21,16 @@ export function useTestCasesBulkActions(
   const [bulkApplyOwner, setBulkApplyOwner] = useState(false);
   const [bulkApplyTag, setBulkApplyTag] = useState(false);
   const [bulkApplyPriority, setBulkApplyPriority] = useState(false);
+  const [bulkApplyProduct, setBulkApplyProduct] = useState(false);
+  const [bulkApplyComponents, setBulkApplyComponents] = useState(false);
 
   const [bulkSuiteId, setBulkSuiteId] = useState<string>("unsorted");
   const [bulkStatus, setBulkStatus] = useState<TestCaseListItem["status"]>("active");
   const [bulkOwnerId, setBulkOwnerId] = useState<string>("unassigned");
   const [bulkTag, setBulkTag] = useState("");
   const [bulkPriority, setBulkPriority] = useState<TestCasePriority>("medium");
+  const [bulkProductId, setBulkProductId] = useState<string>("none");
+  const [bulkComponentIds, setBulkComponentIds] = useState<string[]>([]);
   const [bulkEditModalOpen, setBulkEditModalOpen] = useState(false);
 
   useEffect(() => {
@@ -38,13 +42,23 @@ export function useTestCasesBulkActions(
     const testCaseIds = Array.from(selectedTests);
 
     const anyField =
-      bulkApplySuite || bulkApplyStatus || bulkApplyOwner || bulkApplyTag || bulkApplyPriority;
+      bulkApplySuite ||
+      bulkApplyStatus ||
+      bulkApplyOwner ||
+      bulkApplyTag ||
+      bulkApplyPriority ||
+      bulkApplyProduct ||
+      bulkApplyComponents;
     if (!anyField) {
       notifyError("Select at least one field to update.", "Nothing to apply.");
       return;
     }
     if (bulkApplyTag && !bulkTag.trim()) {
       notifyError("Tag cannot be empty.", "Failed to apply bulk update.");
+      return;
+    }
+    if (bulkApplyComponents && bulkComponentIds.length === 0) {
+      notifyError("Select at least one component.", "Failed to apply bulk update.");
       return;
     }
 
@@ -58,6 +72,8 @@ export function useTestCasesBulkActions(
     if (bulkApplyOwner) payload.owner_id = bulkOwnerId === "unassigned" ? null : bulkOwnerId;
     if (bulkApplyTag) payload.tag = bulkTag.trim();
     if (bulkApplyPriority) payload.priority = bulkPriority;
+    if (bulkApplyProduct) payload.primary_product_id = bulkProductId === "none" ? null : bulkProductId;
+    if (bulkApplyComponents) payload.component_ids = bulkComponentIds;
 
     try {
       const result = await bulkOperateMutation.mutateAsync(payload);
@@ -65,6 +81,7 @@ export function useTestCasesBulkActions(
       onClearPreview?.();
       onCloseActions?.();
       if (bulkApplyTag) setBulkTag("");
+      if (bulkApplyComponents) setBulkComponentIds([]);
       notifySuccess(`${result.affected_count} test case(s) ${BULK_ACTION_LABELS.update}`);
     } catch (error) {
       notifyError(error, "Failed to apply bulk update.");
@@ -78,11 +95,15 @@ export function useTestCasesBulkActions(
     bulkApplyOwner,
     bulkApplyTag,
     bulkApplyPriority,
+    bulkApplyProduct,
+    bulkApplyComponents,
     bulkSuiteId,
     bulkStatus,
     bulkOwnerId,
     bulkTag,
     bulkPriority,
+    bulkProductId,
+    bulkComponentIds,
     setSelectedTests,
     onClearPreview,
     onCloseActions,
@@ -132,6 +153,10 @@ export function useTestCasesBulkActions(
     setBulkApplyTag,
     bulkApplyPriority,
     setBulkApplyPriority,
+    bulkApplyProduct,
+    setBulkApplyProduct,
+    bulkApplyComponents,
+    setBulkApplyComponents,
     bulkSuiteId,
     setBulkSuiteId,
     bulkStatus,
@@ -142,6 +167,10 @@ export function useTestCasesBulkActions(
     setBulkTag,
     bulkPriority,
     setBulkPriority,
+    bulkProductId,
+    setBulkProductId,
+    bulkComponentIds,
+    setBulkComponentIds,
     isApplying: bulkOperateMutation.isPending,
     onApply: handleApplyBulkAction,
     onBulkDelete: handleBulkDelete,

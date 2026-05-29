@@ -328,6 +328,18 @@ def collect_bulk_update_field_keys(payload: TestCaseBulkOperation) -> frozenset[
                 errors={"tag": ["tag is required when set for action 'update'"]},
             )
         keys.add("tag")
+    if "primary_product_id" in payload.model_fields_set:
+        keys.add("primary_product_id")
+    if "component_ids" in payload.model_fields_set:
+        if not payload.component_ids:
+            raise DomainError(
+                status_code=422,
+                code="validation_error",
+                title="Validation error",
+                detail="component_ids must not be empty when set for action 'update'",
+                errors={"component_ids": ["provide at least one component when set for action 'update'"]},
+            )
+        keys.add("component_ids")
     return frozenset(keys)
 
 

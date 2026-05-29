@@ -84,6 +84,49 @@ async def _validate_primary_product(db: AsyncSession, *, project_id: str, primar
         )
 
 
+async def _validate_components_in_project(
+    db: AsyncSession, *, project_id: str, component_ids: list[str]
+) -> None:
+    if not component_ids:
+        return
+    rows = await db.scalars(select(Component).where(Component.id.in_(component_ids)))
+    components = {component.id: component for component in rows.all()}
+    for component_id in component_ids:
+        component = components.get(component_id)
+        if component is None or component.project_id != project_id:
+            raise DomainError(
+                status_code=422,
+                code="component_project_mismatch",
+                title="Validation error",
+                detail="component_ids must reference components from the same project",
+                errors={"component_ids": [f"invalid component_id: {component_id}"]},
+            )
+
+
+async def _bulk_add_component_coverages(
+    db: AsyncSession, *, test_cases: list[TestCase], component_ids: list[str]
+) -> None:
+    """Append direct/regression coverage for each component to every case, skipping duplicates."""
+    requested_ids = list(dict.fromkeys(component_ids))
+    for test_case in test_cases:
+        existing = await db.scalars(
+            select(TestCaseComponentCoverage.component_id).where(
+                TestCaseComponentCoverage.test_case_id == test_case.id
+            )
+        )
+        existing_ids = set(existing.all())
+        for component_id in requested_ids:
+            if component_id in existing_ids:
+                continue
+            db.add(
+                TestCaseComponentCoverage(
+                    test_case_id=test_case.id,
+                    component_id=component_id,
+                )
+            )
+            existing_ids.add(component_id)
+
+
 async def _replace_component_coverages(
     db: AsyncSession,
     *,
@@ -467,13 +510,18 @@ async def _resolve_bulk_operation_membership(
                 status_code=422,
                 code="validation_error",
                 title="Validation error",
-                detail="At least one of suite_id, status, owner_id, tag, or priority must be set for action 'update'.",
+                detail=(
+                    "At least one of suite_id, status, owner_id, tag, priority, "
+                    "primary_product_id, or component_ids must be set for action 'update'."
+                ),
                 errors={
                     "suite_id": ["provide at least one field to update"],
                     "status": ["provide at least one field to update"],
                     "owner_id": ["provide at least one field to update"],
                     "tag": ["provide at least one field to update"],
                     "priority": ["provide at least one field to update"],
+                    "primary_product_id": ["provide at least one field to update"],
+                    "component_ids": ["provide at least one field to update"],
                 },
             )
         if update_keys == frozenset({"status"}):
@@ -527,6 +575,8 @@ def _apply_bulk_update_fields_to_case(
         test_case.status = payload.status
     if "priority" in payload.model_fields_set:
         test_case.priority = payload.priority
+    if "primary_product_id" in payload.model_fields_set:
+        test_case.primary_product_id = payload.primary_product_id
     if normalized_tag is None:
         return
     current_tags = list(test_case.tags or [])
@@ -547,6 +597,14 @@ async def _bulk_update_cases(
         await validate_suite_and_owner(db, payload.project_id, payload.suite_id, None)
     if "owner_id" in payload.model_fields_set:
         await validate_suite_and_owner(db, payload.project_id, None, payload.owner_id)
+    if "primary_product_id" in payload.model_fields_set:
+        await _validate_primary_product(
+            db, project_id=payload.project_id, primary_product_id=payload.primary_product_id
+        )
+    if "component_ids" in payload.model_fields_set:
+        await _validate_components_in_project(
+            db, project_id=payload.project_id, component_ids=payload.component_ids or []
+        )
     normalized_tag = payload.tag.strip() if "tag" in payload.model_fields_set and payload.tag else None
     for test_case in test_cases:
         _apply_bulk_update_fields_to_case(
@@ -554,6 +612,10 @@ async def _bulk_update_cases(
             payload,
             normalized_tag=normalized_tag,
             membership_role=membership_role,
+        )
+    if "component_ids" in payload.model_fields_set and payload.component_ids:
+        await _bulk_add_component_coverages(
+            db, test_cases=test_cases, component_ids=payload.component_ids
         )
     await audit_service.queue_event(
         db,

@@ -25,6 +25,11 @@ type OwnerOption = {
   username: string;
 };
 
+type CatalogOption = {
+  id: string;
+  name: string;
+};
+
 type SuiteWithMeta = {
   id: string;
   name: string;
@@ -41,13 +46,19 @@ type Props = Readonly<{
   bulkApplyOwner: boolean;
   bulkApplyTag: boolean;
   bulkApplyPriority: boolean;
+  bulkApplyProduct: boolean;
+  bulkApplyComponents: boolean;
   bulkSuiteId: string;
   bulkStatus: TestCaseListItem["status"];
   bulkOwnerId: string;
   bulkTag: string;
   bulkPriority: TestCasePriority;
+  bulkProductId: string;
+  bulkComponentIds: string[];
   suites: SuiteWithMeta[];
   ownerOptions: OwnerOption[];
+  productOptions: CatalogOption[];
+  componentOptions: CatalogOption[];
   isApplying: boolean;
   onClose: () => void;
   onBulkApplySuiteChange: (value: boolean) => void;
@@ -55,11 +66,15 @@ type Props = Readonly<{
   onBulkApplyOwnerChange: (value: boolean) => void;
   onBulkApplyTagChange: (value: boolean) => void;
   onBulkApplyPriorityChange: (value: boolean) => void;
+  onBulkApplyProductChange: (value: boolean) => void;
+  onBulkApplyComponentsChange: (value: boolean) => void;
   onBulkSuiteIdChange: (suiteId: string) => void;
   onBulkStatusChange: (status: TestCaseListItem["status"]) => void;
   onBulkOwnerIdChange: (ownerId: string) => void;
   onBulkTagChange: (tag: string) => void;
   onBulkPriorityChange: (priority: TestCasePriority) => void;
+  onBulkProductIdChange: (productId: string) => void;
+  onBulkComponentIdsChange: (componentIds: string[]) => void;
   onApply: () => void | Promise<void>;
 }>;
 
@@ -102,13 +117,19 @@ export function TestCasesBulkEditModal({
   bulkApplyOwner,
   bulkApplyTag,
   bulkApplyPriority,
+  bulkApplyProduct,
+  bulkApplyComponents,
   bulkSuiteId,
   bulkStatus,
   bulkOwnerId,
   bulkTag,
   bulkPriority,
+  bulkProductId,
+  bulkComponentIds,
   suites,
   ownerOptions,
+  productOptions,
+  componentOptions,
   isApplying,
   onClose,
   onBulkApplySuiteChange,
@@ -116,13 +137,25 @@ export function TestCasesBulkEditModal({
   onBulkApplyOwnerChange,
   onBulkApplyTagChange,
   onBulkApplyPriorityChange,
+  onBulkApplyProductChange,
+  onBulkApplyComponentsChange,
   onBulkSuiteIdChange,
   onBulkStatusChange,
   onBulkOwnerIdChange,
   onBulkTagChange,
   onBulkPriorityChange,
+  onBulkProductIdChange,
+  onBulkComponentIdsChange,
   onApply,
 }: Props) {
+  const toggleComponent = (componentId: string, checked: boolean) => {
+    if (checked) {
+      if (bulkComponentIds.includes(componentId)) return;
+      onBulkComponentIdsChange([...bulkComponentIds, componentId]);
+    } else {
+      onBulkComponentIdsChange(bulkComponentIds.filter((id) => id !== componentId));
+    }
+  };
   return (
     <AppModal
       isOpen={isOpen}
@@ -251,6 +284,58 @@ export function TestCasesBulkEditModal({
                 </option>
               ))}
             </SelectField>
+          </BulkFieldToggle>
+
+          <BulkFieldToggle
+            id="bulk-apply-product"
+            checked={bulkApplyProduct}
+            onCheckedChange={onBulkApplyProductChange}
+            disabled={isApplying}
+            label="Primary product"
+          >
+            <SelectField
+              label="Primary product"
+              value={bulkProductId}
+              onChange={(event) => onBulkProductIdChange(event.target.value)}
+              disabled={isApplying}
+            >
+              <option value="none">None</option>
+              {productOptions.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
+              ))}
+            </SelectField>
+          </BulkFieldToggle>
+
+          <BulkFieldToggle
+            id="bulk-apply-components"
+            checked={bulkApplyComponents}
+            onCheckedChange={onBulkApplyComponentsChange}
+            disabled={isApplying}
+            label="Add components"
+          >
+            <div className="space-y-2">
+              <FieldHint>
+                Selected components are added as coverage to each test case. Existing coverage is kept.
+              </FieldHint>
+              {componentOptions.length === 0 ? (
+                <div className="text-sm text-[var(--muted-foreground)]">No components available.</div>
+              ) : (
+                <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                  {componentOptions.map((component) => (
+                    <CheckboxField
+                      key={component.id}
+                      id={`bulk-component-${component.id}`}
+                      label={component.name}
+                      checked={bulkComponentIds.includes(component.id)}
+                      disabled={isApplying}
+                      onChange={(event) => toggleComponent(component.id, event.target.checked)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </BulkFieldToggle>
         </div>
       </StandardModalLayout>
