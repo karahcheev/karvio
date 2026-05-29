@@ -29,6 +29,8 @@ export type TestCaseListItem = {
   tags: string[];
   lastRun: string;
   lastStatus: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type NewTestCaseForm = {
@@ -60,4 +62,16 @@ export type NewTestCaseForm = {
   }>;
 };
 
-export type TestCaseColumn = "id" | "title" | "suite" | "tags" | "status" | "priority" | "type" | "owner" | "lastRun";
+export type TestCaseColumn =
+  | "id"
+  | "title"
+  | "suite"
+  | "tags"
+  | "status"
+  | "priority"
+  | "type"
+  | "owner"
+  | "lastRun"
+  | "expectedTime"
+  | "created"
+  | "updated";

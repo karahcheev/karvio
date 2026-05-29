@@ -9,7 +9,7 @@ import {
   type UnifiedTableProps,
   type UnifiedTableSorting,
 } from "@/shared/ui/Table";
-import { StatusCell, TagsCell } from "@/shared/ui/table-cells";
+import { DateTimeCell, StatusCell, TagsCell } from "@/shared/ui/table-cells";
 import { formatTestCaseStatusLabel, getLastStatusLabel, getPriorityTone, getStatusTone } from "./TestCaseBadges";
 import { formatPriorityLabel } from "@/shared/domain/priority";
 import { formatTestCaseTypeLabel } from "@/shared/domain/testCaseType";
@@ -172,6 +172,36 @@ export function TestCasesTable({
             {getLastStatusLabel(test.lastStatus)}
           </div>
         ),
+      },
+      {
+        id: "expectedTime",
+        label: "Expected Time",
+        menuLabel: "Expected Time",
+        defaultWidth: 140,
+        minWidth: 50,
+        renderCell: (test) => (
+          <span className="block truncate text-sm text-[var(--muted-foreground)]">{test.time || "—"}</span>
+        ),
+      },
+      {
+        id: "created",
+        label: "Created",
+        menuLabel: "Created",
+        sortable: true,
+        defaultSortDirection: "desc",
+        defaultWidth: 180,
+        minWidth: 50,
+        renderCell: (test) => <DateTimeCell value={test.createdAt} truncate={false} />,
+      },
+      {
+        id: "updated",
+        label: "Updated",
+        menuLabel: "Updated",
+        sortable: true,
+        defaultSortDirection: "desc",
+        defaultWidth: 180,
+        minWidth: 50,
+        renderCell: (test) => <DateTimeCell value={test.updatedAt} truncate={false} />,
       },
     ],
     [location.search, projectId]

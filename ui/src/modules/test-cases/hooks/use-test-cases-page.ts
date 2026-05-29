@@ -92,7 +92,7 @@ export function useTestCasesPage() {
 
   const [deletingTestCaseId, setDeletingTestCaseId] = useState<string | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<Set<TestCaseColumn>>(
-    new Set(["id", "title", "suite", "tags", "status", "priority"]),
+    new Set(["id", "title", "suite", "tags", "status", "priority", "expectedTime", "created", "updated"]),
   );
   const [columnsOpen, setColumnsOpen] = useState(false);
 
@@ -287,7 +287,7 @@ export function useTestCasesPage() {
         totalPages: data.totalPages,
         totalItems: data.listTotalItems,
         pageSize: data.pageSize,
-        pageSizeOptions: [10, 25, 50],
+        pageSizeOptions: [10, 25, 50, 100, 200],
         defaultPageSize: data.pageSize,
         onPageChange: (page: number) => {
           if (page === data.currentPage) return;

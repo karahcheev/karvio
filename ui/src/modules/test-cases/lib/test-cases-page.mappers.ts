@@ -18,12 +18,14 @@ export function mapTestCaseToListItem(item: TestCaseDto, suiteNamesById: Map<str
     tags: item.tags,
     lastRun: formatRelativeTime(item.updated_at),
     lastStatus: null,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
   };
 }
 
 export function mapTestCaseSorting(
   column: TestCaseColumn,
-): "title" | "status" | "priority" | "suite_name" | "owner_name" | "updated_at" | null {
+): "title" | "status" | "priority" | "suite_name" | "owner_name" | "created_at" | "updated_at" | null {
   switch (column) {
     case "title":
       return "title";
@@ -36,10 +38,14 @@ export function mapTestCaseSorting(
     case "owner":
       return "owner_name";
     case "lastRun":
+    case "updated":
       return "updated_at";
+    case "created":
+      return "created_at";
     case "id":
     case "tags":
     case "type":
+    case "expectedTime":
       return null;
   }
 }
