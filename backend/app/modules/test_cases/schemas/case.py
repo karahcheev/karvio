@@ -181,6 +181,8 @@ class TestCaseBulkOperation(BaseModel):
     owner_id: str | None = None
     tag: str | None = None
     priority: TestCasePriority | None = None
+    primary_product_id: str | None = None
+    component_ids: list[str] | None = None
 
 
 class TestCaseBulkOperationResult(BaseModel):

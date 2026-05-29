@@ -542,6 +542,8 @@ export interface TestCasesBulkPayload {
   owner_id?: string | null;
   tag?: string;
   priority?: TestCasePriority;
+  primary_product_id?: string | null;
+  component_ids?: string[];
 }
 
 export interface TestCasesBulkResult {
