@@ -1,7 +1,7 @@
 import type { NewTestCaseForm } from "./types";
 
-export function isNewTestCaseFormDirty(form: NewTestCaseForm): boolean {
-  const defaults = createDefaultNewTestCaseForm();
+export function isNewTestCaseFormDirty(form: NewTestCaseForm, defaultOwnerId = "unassigned"): boolean {
+  const defaults = createDefaultNewTestCaseForm(defaultOwnerId);
   const anyTextFilled = [
     form.title,
     form.automationId,
@@ -28,7 +28,7 @@ export function isNewTestCaseFormDirty(form: NewTestCaseForm): boolean {
   );
 }
 
-export function createDefaultNewTestCaseForm(): NewTestCaseForm {
+export function createDefaultNewTestCaseForm(ownerId = "unassigned"): NewTestCaseForm {
   return {
     title: "",
     templateType: "steps",
@@ -42,7 +42,7 @@ export function createDefaultNewTestCaseForm(): NewTestCaseForm {
     time: "",
     priority: "medium",
     testCaseType: "manual",
-    ownerId: "unassigned",
+    ownerId,
     primaryProductId: "none",
     tags: [],
     tagInput: "",

@@ -19,6 +19,7 @@ const hoisted = vi.hoisted(() => ({
   uploadTestCaseAttachment: vi.fn(),
   notifyError: vi.fn(),
   notifySuccess: vi.fn(),
+  getSessionUser: vi.fn(),
 }));
 
 vi.mock("@/shared/api", () => ({
@@ -52,6 +53,10 @@ vi.mock("@/shared/lib/notifications", () => ({
   notifySuccess: hoisted.notifySuccess,
 }));
 
+vi.mock("@/shared/auth", () => ({
+  getSessionUser: hoisted.getSessionUser,
+}));
+
 describe("useTestCasesCreate", () => {
   beforeEach(() => {
     hoisted.createMutateAsync.mockReset();
@@ -64,6 +69,38 @@ describe("useTestCasesCreate", () => {
     hoisted.uploadTestCaseAttachment.mockReset();
     hoisted.notifyError.mockReset();
     hoisted.notifySuccess.mockReset();
+    hoisted.getSessionUser.mockReset();
+    hoisted.getSessionUser.mockReturnValue(null);
+  });
+
+  it("pre-selects the current user as owner when they are a project member", () => {
+    hoisted.getSessionUser.mockReturnValue({
+      id: "user_1",
+      username: "alice",
+      role: "user",
+      project_memberships: [],
+    });
+    const ownerOptions = [
+      { id: "user_1" },
+      { id: "user_2" },
+    ];
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", ownerOptions));
+
+    expect(result.current.defaultOwnerId).toBe("user_1");
+    expect(result.current.newTestCase.ownerId).toBe("user_1");
+  });
+
+  it("leaves owner unassigned when the current user is not a project member", () => {
+    hoisted.getSessionUser.mockReturnValue({
+      id: "user_99",
+      username: "outsider",
+      role: "user",
+      project_memberships: [],
+    });
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", [{ id: "user_1" }]));
+
+    expect(result.current.defaultOwnerId).toBe("unassigned");
+    expect(result.current.newTestCase.ownerId).toBe("unassigned");
   });
 
   it("uploads queued inline step images on create and replaces local markdown placeholders", async () => {
@@ -85,7 +122,7 @@ describe("useTestCasesCreate", () => {
       step_attachments: {},
     });
 
-    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1"));
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", []));
 
     act(() => {
       result.current.setNewTestCase((prev) => ({
@@ -147,7 +184,7 @@ describe("useTestCasesCreate", () => {
     });
     hoisted.patchMutateAsync.mockResolvedValue({});
 
-    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1"));
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", []));
 
     const file = new File(["img"], "precondition.png", { type: "image/png" });
     let placeholder: string | null = null;
@@ -182,7 +219,7 @@ describe("useTestCasesCreate", () => {
   });
 
   it("keeps AI controls disabled when the server reports disabled", () => {
-    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1"));
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", []));
 
     expect(result.current.aiEnabled).toBe(false);
   });
@@ -209,7 +246,7 @@ describe("useTestCasesCreate", () => {
       source_references: [],
       warnings: [],
     });
-    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1"));
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", []));
 
     act(() => {
       result.current.onAiSourceTextChange("Generate checkout cases");
@@ -231,7 +268,7 @@ describe("useTestCasesCreate", () => {
 
   it("accepts and rejects generated suggestions", () => {
     hoisted.aiStatus.data = { enabled: true, provider: "openai", model: "test-model" };
-    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1"));
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", []));
     const draft = {
       title: "Accepted AI case",
       preconditions: "User is signed in.",
@@ -274,7 +311,7 @@ describe("useTestCasesCreate", () => {
       ],
       warnings: [],
     });
-    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1"));
+    const { result } = renderHook(() => useTestCasesCreate("suite_1", "proj_1", []));
 
     act(() => {
       result.current.setNewTestCase((prev) => ({ ...prev, title: "Existing" }));
