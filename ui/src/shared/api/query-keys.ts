@@ -51,6 +51,7 @@ export const queryKeys = {
       ["projects", projectId, "test-cases", "list", sortBy, sortDirection] as const,
     page: (projectId: string, params?: Record<string, unknown>) =>
       ["projects", projectId, "test-cases", "page", params ?? {}] as const,
+    tagValues: (projectId: string) => ["projects", projectId, "test-cases", "tags"] as const,
     search: (projectId: string, q: string, params?: Record<string, unknown>) =>
       ["projects", projectId, "test-cases", "search", q, params ?? {}] as const,
     detail: (testCaseId: string) => ["test-cases", testCaseId] as const,

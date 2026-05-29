@@ -5,6 +5,7 @@ import {
   useAllProductsQuery,
   useProjectMembersQuery,
   useSuitesQuery,
+  useTestCaseTagsQuery,
   useTestCasesPageQuery,
   useTestCasesUnscopedTotalQuery,
   type TestCaseDto,
@@ -22,6 +23,12 @@ export type UseTestCasesPageDataParams = {
   projectId: string | undefined;
   selectedStatuses: Set<string>;
   selectedPriorities: Set<string>;
+  selectedTags: Set<string>;
+  selectedTypes: Set<string>;
+  selectedProducts: Set<string>;
+  selectedComponents: Set<string>;
+  selectedOwnerId: string | null;
+  includeNestedSuites: boolean;
   searchQuery: string;
   sorting: UnifiedTableSorting<TestCaseColumn>;
 };
@@ -29,7 +36,19 @@ export type UseTestCasesPageDataParams = {
 export function useTestCasesPageData(params: UseTestCasesPageDataParams) {
   const [searchParams] = useSearchParams();
   const selectedSuite = searchParams.get(SELECTED_SUITE_PARAM);
-  const { projectId, selectedStatuses, selectedPriorities, searchQuery, sorting } = params;
+  const {
+    projectId,
+    selectedStatuses,
+    selectedPriorities,
+    selectedTags,
+    selectedTypes,
+    selectedProducts,
+    selectedComponents,
+    selectedOwnerId,
+    includeNestedSuites,
+    searchQuery,
+    sorting,
+  } = params;
   const debouncedSearchQuery = useDebouncedValue(searchQuery, LIST_SEARCH_DEBOUNCE_MS);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -38,21 +57,38 @@ export function useTestCasesPageData(params: UseTestCasesPageDataParams) {
   const projectMembersQuery = useProjectMembersQuery(projectId);
   const productsQuery = useAllProductsQuery(projectId);
   const componentsQuery = useAllComponentsQuery(projectId);
+  const tagsQuery = useTestCaseTagsQuery(projectId);
 
   const selectedSuiteIdsForFilter = useMemo(
-    () => getSelectedSuiteIdsForFilter(selectedSuite, suitesQuery.data),
-    [selectedSuite, suitesQuery.data],
+    () => getSelectedSuiteIdsForFilter(selectedSuite, suitesQuery.data, includeNestedSuites),
+    [selectedSuite, suitesQuery.data, includeNestedSuites],
   );
 
   const listFilters = useMemo(
     () => ({
       statuses: selectedStatuses.size > 0 ? (Array.from(selectedStatuses) as TestCaseDto["status"][]) : undefined,
       priorities: selectedPriorities.size > 0 ? Array.from(selectedPriorities) : undefined,
+      tags: selectedTags.size > 0 ? Array.from(selectedTags) : undefined,
+      testCaseTypes: selectedTypes.size > 0 ? Array.from(selectedTypes) : undefined,
+      productIds: selectedProducts.size > 0 ? Array.from(selectedProducts) : undefined,
+      componentIds: selectedComponents.size > 0 ? Array.from(selectedComponents) : undefined,
+      ownerId: selectedOwnerId ?? undefined,
       search: debouncedSearchQuery.trim() || undefined,
       sortBy: mapTestCaseSorting(sorting.column) ?? undefined,
       sortOrder: sorting.direction,
     }),
-    [selectedStatuses, selectedPriorities, debouncedSearchQuery, sorting.column, sorting.direction],
+    [
+      selectedStatuses,
+      selectedPriorities,
+      selectedTags,
+      selectedTypes,
+      selectedProducts,
+      selectedComponents,
+      selectedOwnerId,
+      debouncedSearchQuery,
+      sorting.column,
+      sorting.direction,
+    ],
   );
 
   const testCasesPageQuery = useTestCasesPageQuery(projectId, {
@@ -69,6 +105,11 @@ export function useTestCasesPageData(params: UseTestCasesPageDataParams) {
         projectId: projectId ?? "",
         statuses: listFilters.statuses ?? null,
         priorities: listFilters.priorities ?? null,
+        tags: listFilters.tags ?? null,
+        testCaseTypes: listFilters.testCaseTypes ?? null,
+        productIds: listFilters.productIds ?? null,
+        componentIds: listFilters.componentIds ?? null,
+        ownerId: listFilters.ownerId ?? null,
         search: listFilters.search ?? null,
         sortBy: listFilters.sortBy ?? null,
         sortOrder: listFilters.sortOrder ?? null,
@@ -121,7 +162,19 @@ export function useTestCasesPageData(params: UseTestCasesPageDataParams) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedSuiteIdsForFilter, selectedStatuses, selectedPriorities, debouncedSearchQuery, sorting.column, sorting.direction]);
+  }, [
+    selectedSuiteIdsForFilter,
+    selectedStatuses,
+    selectedPriorities,
+    selectedTags,
+    selectedTypes,
+    selectedProducts,
+    selectedComponents,
+    selectedOwnerId,
+    debouncedSearchQuery,
+    sorting.column,
+    sorting.direction,
+  ]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -197,6 +250,8 @@ export function useTestCasesPageData(params: UseTestCasesPageDataParams) {
     [componentsQuery.data],
   );
 
+  const tagOptions = useMemo<string[]>(() => tagsQuery.data ?? [], [tagsQuery.data]);
+
   return {
     selectedSuiteIdsForFilter,
     suites,
@@ -206,6 +261,7 @@ export function useTestCasesPageData(params: UseTestCasesPageDataParams) {
     ownerOptions,
     productOptions,
     componentOptions,
+    tagOptions,
     currentPage,
     setCurrentPage,
     pageSize,

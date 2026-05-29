@@ -122,6 +122,7 @@ class TestCaseListQuery(BaseModel):
     suite_id: list[str] | None = None
     tag: list[str] | None = None
     owner_id: str | None = None
+    test_case_type: list[TestCaseType] | None = None
     product_id: list[str] | None = None
     component_id: list[str] | None = None
     minimum_component_risk_level: ComponentRiskLevel | None = None
@@ -155,6 +156,10 @@ class TestCasesList(BaseModel):
     page_size: int = 50
     has_next: bool = False
     total: int = 0
+
+
+class TestCaseTagsList(BaseModel):
+    items: list[str] = Field(default_factory=list)
 
 
 class TestCaseBulkAction(str, Enum):

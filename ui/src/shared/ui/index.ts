@@ -17,6 +17,7 @@ export * from "./EntityTableState";
 export * from "./EntityTableWithStates";
 export * from "./FilterChecklistSection";
 export * from "./FilterableEntityList";
+export * from "./SearchableFilterChecklistSection";
 export * from "./FiltersPopover";
 export * from "./FormField";
 export * from "./Input";

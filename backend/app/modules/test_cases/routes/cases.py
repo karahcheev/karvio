@@ -21,6 +21,7 @@ from app.modules.test_cases.schemas.case import (
     TestCasePatch,
     TestCaseRead,
     TestCasesList,
+    TestCaseTagsList,
 )
 from app.modules.test_cases.schemas.steps import TestStepsReplaceRequest, TestStepsResponse
 from app.modules.test_cases.services import cases, steps
@@ -75,6 +76,15 @@ async def bulk_operate_test_cases(
         storage=storage,
         current_user=current_user,
     )
+
+
+@router.get("/tags")
+async def list_test_case_tags(
+    project_id: Annotated[str, Depends(get_project_id_required)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> TestCaseTagsList:
+    return await cases.list_test_case_tags(db, project_id=project_id, current_user=current_user)
 
 
 @router.get("/export")

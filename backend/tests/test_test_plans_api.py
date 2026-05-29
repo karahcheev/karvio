@@ -83,6 +83,40 @@ async def seeded_test_plan(db_session: AsyncSession, auth_user: User) -> TestPla
     return plan
 
 
+async def test_list_test_plans_filters_by_tag(client, db_session: AsyncSession, auth_headers):
+    """Regression: tag filter must work on Postgres (JSON column, no LIKE operator).
+
+    Mirrors test_test_case_list_filters_api.py::test_list_filters_by_tag.
+    """
+    project = Project(id="proj_tp_tag_filter", name="Tag Filter")
+    tagged = TestPlan(
+        id="plan_tp_tagged",
+        project_id=project.id,
+        name="Tagged Plan",
+        tags=["alpha", "beta"],
+        created_by="user_auth_1",
+    )
+    untagged = TestPlan(
+        id="plan_tp_untagged",
+        project_id=project.id,
+        name="Untagged Plan",
+        tags=["gamma"],
+        created_by="user_auth_1",
+    )
+    membership = ProjectMember(project_id=project.id, user_id="user_auth_1", role=ProjectMemberRole.tester)
+    db_session.add_all([project, tagged, untagged, membership])
+    await db_session.commit()
+
+    resp = await client.get(
+        f"/api/v1/test-plans?project_id={project.id}&tags=alpha",
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    items = resp.json()["items"]
+    assert len(items) == 1
+    assert items[0]["name"] == "Tagged Plan"
+
+
 async def test_list_test_plans_bulk_read_enrichment(client, db_session: AsyncSession, auth_headers):
     """Regression: list endpoint enriches suite_names/case_keys via bulk lookups (not per-row get_by_id)."""
     project = Project(id="proj_tp_bulk", name="Bulk Read")

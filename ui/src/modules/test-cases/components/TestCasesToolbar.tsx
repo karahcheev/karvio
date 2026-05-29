@@ -2,13 +2,21 @@
 import { Plus } from "lucide-react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { PageHeaderSection } from "@/shared/ui/PageHeader";
-import { FilterChecklistSection } from "@/shared/ui/FilterChecklistSection";
+import { SearchableFilterChecklistSection } from "@/shared/ui/SearchableFilterChecklistSection";
 import { SearchFiltersToolbar } from "@/shared/ui/SearchFiltersToolbar";
+import { Switch } from "@/shared/ui/Switch";
+import { TagChip } from "@/shared/ui/TagChip";
 import { formatTestCaseStatusLabel } from "./TestCaseBadges";
 import { TestCaseExportMenu } from "./TestCaseExportMenu";
 import type { SuiteNode } from "../utils/types";
 import type { TestCaseExportFormat } from "@/shared/api";
+import { TEST_CASE_TYPE_OPTIONS, formatTestCaseTypeLabel } from "@/shared/domain/testCaseType";
 import { Button } from "@/shared/ui/Button";
+
+const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
+type OwnerOption = { id: string; username: string };
+type NamedOption = { id: string; name: string };
 
 type Props = Readonly<{
   suites: SuiteNode[];
@@ -20,9 +28,25 @@ type Props = Readonly<{
   activeFiltersCount: number;
   selectedStatuses: Set<string>;
   selectedPriorities: Set<string>;
+  selectedTags: Set<string>;
+  selectedTypes: Set<string>;
+  selectedProducts: Set<string>;
+  selectedComponents: Set<string>;
+  selectedOwnerId: string | null;
+  includeNestedSuites: boolean;
+  tagOptions: string[];
+  ownerOptions: OwnerOption[];
+  productOptions: NamedOption[];
+  componentOptions: NamedOption[];
   onToggleFilter: (filterSet: Set<string>, setFilter: (set: Set<string>) => void, value: string) => void;
+  onToggleOwner: (ownerId: string) => void;
   setSelectedStatuses: (set: Set<string>) => void;
   setSelectedPriorities: (set: Set<string>) => void;
+  setSelectedTags: (set: Set<string>) => void;
+  setSelectedTypes: (set: Set<string>) => void;
+  setSelectedProducts: (set: Set<string>) => void;
+  setSelectedComponents: (set: Set<string>) => void;
+  setIncludeNestedSuites: Dispatch<SetStateAction<boolean>>;
   onClearAllFilters: () => void;
   onNewTestCaseClick: () => void;
   onExport: (format: TestCaseExportFormat) => void | Promise<void>;
@@ -42,9 +66,25 @@ export function TestCasesToolbar({
   activeFiltersCount,
   selectedStatuses,
   selectedPriorities,
+  selectedTags,
+  selectedTypes,
+  selectedProducts,
+  selectedComponents,
+  selectedOwnerId,
+  includeNestedSuites,
+  tagOptions,
+  ownerOptions,
+  productOptions,
+  componentOptions,
   onToggleFilter,
+  onToggleOwner,
   setSelectedStatuses,
   setSelectedPriorities,
+  setSelectedTags,
+  setSelectedTypes,
+  setSelectedProducts,
+  setSelectedComponents,
+  setIncludeNestedSuites,
   onClearAllFilters,
   onNewTestCaseClick,
   onExport,
@@ -53,6 +93,70 @@ export function TestCasesToolbar({
   toolbarRightSlot,
 }: Props) {
   const selectedSuiteName = suites.find((suite) => suite.id === selectedSuite)?.name;
+  const ownerLabelById = new Map(ownerOptions.map((owner) => [owner.id, owner.username]));
+  const productLabelById = new Map(productOptions.map((product) => [product.id, product.name]));
+  const componentLabelById = new Map(componentOptions.map((component) => [component.id, component.name]));
+  const selectedOwnerSet = selectedOwnerId ? new Set([selectedOwnerId]) : new Set<string>();
+
+  const statusOptionItems = ["draft", "active", "archived"].map((value) => ({
+    value,
+    label: formatTestCaseStatusLabel(value),
+  }));
+  const priorityOptionItems = ["critical", "high", "medium", "low"].map((value) => ({
+    value,
+    label: capitalize(value),
+  }));
+  const typeOptionItems = TEST_CASE_TYPE_OPTIONS.map((value) => ({ value, label: formatTestCaseTypeLabel(value) }));
+  const tagOptionItems = tagOptions.map((tag) => ({ value: tag, label: tag }));
+  const ownerOptionItems = ownerOptions.map((owner) => ({ value: owner.id, label: owner.username }));
+  const productOptionItems = productOptions.map((product) => ({ value: product.id, label: product.name }));
+  const componentOptionItems = componentOptions.map((component) => ({ value: component.id, label: component.name }));
+
+  // Flat list of active filters rendered as removable chips at the top of the panel.
+  const activeChips: { key: string; label: string; onRemove: () => void }[] = [
+    ...(selectedSuite && !includeNestedSuites
+      ? [{ key: "nested", label: "Direct suite only", onRemove: () => setIncludeNestedSuites(true) }]
+      : []),
+    ...Array.from(selectedStatuses).map((value) => ({
+      key: `status:${value}`,
+      label: formatTestCaseStatusLabel(value),
+      onRemove: () => onToggleFilter(selectedStatuses, setSelectedStatuses, value),
+    })),
+    ...Array.from(selectedPriorities).map((value) => ({
+      key: `priority:${value}`,
+      label: capitalize(value),
+      onRemove: () => onToggleFilter(selectedPriorities, setSelectedPriorities, value),
+    })),
+    ...Array.from(selectedTypes).map((value) => ({
+      key: `type:${value}`,
+      label: formatTestCaseTypeLabel(value),
+      onRemove: () => onToggleFilter(selectedTypes, setSelectedTypes, value),
+    })),
+    ...(selectedOwnerId
+      ? [
+          {
+            key: `owner:${selectedOwnerId}`,
+            label: ownerLabelById.get(selectedOwnerId) ?? selectedOwnerId,
+            onRemove: () => onToggleOwner(selectedOwnerId),
+          },
+        ]
+      : []),
+    ...Array.from(selectedTags).map((value) => ({
+      key: `tag:${value}`,
+      label: value,
+      onRemove: () => onToggleFilter(selectedTags, setSelectedTags, value),
+    })),
+    ...Array.from(selectedProducts).map((value) => ({
+      key: `product:${value}`,
+      label: productLabelById.get(value) ?? value,
+      onRemove: () => onToggleFilter(selectedProducts, setSelectedProducts, value),
+    })),
+    ...Array.from(selectedComponents).map((value) => ({
+      key: `component:${value}`,
+      label: componentLabelById.get(value) ?? value,
+      onRemove: () => onToggleFilter(selectedComponents, setSelectedComponents, value),
+    })),
+  ];
 
   return (
     <>
@@ -85,23 +189,88 @@ export function TestCasesToolbar({
         onFiltersOpenChange={setFiltersOpen}
         activeFiltersCount={activeFiltersCount}
         onClearFilters={onClearAllFilters}
-        panelClassName="w-72"
+        panelClassName="w-80"
         rightSlot={toolbarRightSlot}
         filtersContent={
           <>
-            <FilterChecklistSection
+            {activeChips.length > 0 ? (
+              <div className="mb-4 flex flex-wrap gap-1.5">
+                {activeChips.map((chip) => (
+                  <TagChip
+                    key={chip.key}
+                    variant="fill"
+                    removable
+                    onRemove={chip.onRemove}
+                    removeAriaLabel={`Remove ${chip.label}`}
+                  >
+                    {chip.label}
+                  </TagChip>
+                ))}
+              </div>
+            ) : null}
+            {selectedSuite ? (
+              <label className="mb-4 flex cursor-pointer items-center justify-between gap-2">
+                <span className="text-sm font-medium text-[var(--foreground)]">Include nested suites</span>
+                <Switch checked={includeNestedSuites} onCheckedChange={setIncludeNestedSuites} />
+              </label>
+            ) : null}
+            <SearchableFilterChecklistSection
               title="Status"
-              values={["draft", "active", "archived"]}
+              options={statusOptionItems}
               selectedValues={selectedStatuses}
               onToggle={(value) => onToggleFilter(selectedStatuses, setSelectedStatuses, value)}
-              getLabel={formatTestCaseStatusLabel}
+              collapsible
             />
-            <FilterChecklistSection
+            <SearchableFilterChecklistSection
               title="Priority"
-              values={["high", "medium", "low"]}
+              options={priorityOptionItems}
               selectedValues={selectedPriorities}
               onToggle={(value) => onToggleFilter(selectedPriorities, setSelectedPriorities, value)}
-              getLabel={(value) => value.charAt(0).toUpperCase() + value.slice(1)}
+              collapsible
+            />
+            <SearchableFilterChecklistSection
+              title="Type"
+              options={typeOptionItems}
+              selectedValues={selectedTypes}
+              onToggle={(value) => onToggleFilter(selectedTypes, setSelectedTypes, value)}
+              collapsible
+            />
+            <SearchableFilterChecklistSection
+              title="Owner"
+              mode="single"
+              options={ownerOptionItems}
+              selectedValues={selectedOwnerSet}
+              onToggle={onToggleOwner}
+              collapsible
+              defaultOpen={false}
+              emptyLabel="No owners found"
+            />
+            <SearchableFilterChecklistSection
+              title="Tags"
+              options={tagOptionItems}
+              selectedValues={selectedTags}
+              onToggle={(value) => onToggleFilter(selectedTags, setSelectedTags, value)}
+              collapsible
+              defaultOpen={false}
+              emptyLabel="No tags found"
+            />
+            <SearchableFilterChecklistSection
+              title="Product"
+              options={productOptionItems}
+              selectedValues={selectedProducts}
+              onToggle={(value) => onToggleFilter(selectedProducts, setSelectedProducts, value)}
+              collapsible
+              defaultOpen={false}
+              emptyLabel="No products found"
+            />
+            <SearchableFilterChecklistSection
+              title="Component"
+              options={componentOptionItems}
+              selectedValues={selectedComponents}
+              onToggle={(value) => onToggleFilter(selectedComponents, setSelectedComponents, value)}
+              collapsible
+              defaultOpen={false}
+              emptyLabel="No components found"
             />
           </>
         }

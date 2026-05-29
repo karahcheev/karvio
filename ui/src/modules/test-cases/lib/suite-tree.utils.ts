@@ -63,8 +63,10 @@ export function buildSuiteMeta(
 export function getSelectedSuiteIdsForFilter(
   selectedSuite: string | null,
   suitesData: { id: string; parent_id: string | null }[] | undefined,
+  includeNested = true,
 ): Set<string> | null {
   if (!selectedSuite || !suitesData) return null;
+  if (!includeNested) return new Set([selectedSuite]);
   const childrenByParent = new Map<string | null, typeof suitesData>();
   for (const suite of suitesData) {
     const key = suite.parent_id;

@@ -6,7 +6,7 @@ from sqlalchemy import String, and_, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.models.enums import ComponentRiskLevel, TestCasePriority, TestCaseStatus
+from app.models.enums import ComponentRiskLevel, TestCasePriority, TestCaseStatus, TestCaseType
 from app.modules.products.models import Component, TestCaseComponentCoverage
 from app.modules.projects.models import Suite, User
 from app.modules.test_cases.models import TestCase
@@ -43,6 +43,7 @@ def _test_case_list_conditions(
     suite_ids: list[str] | None,
     tags: list[str] | None,
     owner_id: str | None,
+    test_case_types: list[TestCaseType] | None,
     product_ids: list[str] | None,
     component_ids: list[str] | None,
     minimum_component_risk_level: ComponentRiskLevel | None,
@@ -60,11 +61,17 @@ def _test_case_list_conditions(
     if priority_filters:
         conditions.append(TestCase.priority.in_(priority_filters))
     if tags:
-        tag_conditions = [TestCase.tags.contains([t]) for t in tags if t.strip()]
+        # `tags` is a JSON column. JSON has no LIKE/containment operator in Postgres, so match
+        # against the serialized text (e.g. '["alpha","beta"]') by the quoted element. Works on
+        # both SQLite (tests) and Postgres, mirroring the search filter below.
+        tags_as_text = cast(TestCase.tags, String)
+        tag_conditions = [tags_as_text.ilike(f'%"{t.strip()}"%') for t in tags if t.strip()]
         if tag_conditions:
             conditions.append(or_(*tag_conditions))
     if owner_id:
         conditions.append(TestCase.owner_id == owner_id)
+    if test_case_types:
+        conditions.append(TestCase.test_case_type.in_(test_case_types))
     if product_ids:
         conditions.append(TestCase.primary_product_id.in_(product_ids))
     if component_ids:
@@ -104,6 +111,7 @@ async def list_by_project(
     suite_ids: list[str] | None,
     tags: list[str] | None,
     owner_id: str | None,
+    test_case_types: list[TestCaseType] | None,
     product_ids: list[str] | None,
     component_ids: list[str] | None,
     minimum_component_risk_level: ComponentRiskLevel | None,
@@ -119,6 +127,7 @@ async def list_by_project(
         suite_ids=suite_ids,
         tags=tags,
         owner_id=owner_id,
+        test_case_types=test_case_types,
         product_ids=product_ids,
         component_ids=component_ids,
         minimum_component_risk_level=minimum_component_risk_level,
@@ -151,6 +160,19 @@ async def list_by_project(
     page_rows = rows[:page_size]
     items = [row[0] for row in page_rows]
     return OffsetPage(items=items, page=page, page_size=page_size, has_next=has_next, total=total)
+
+
+async def distinct_tags_for_project(db: AsyncSession, *, project_id: str) -> list[str]:
+    result = await db.scalars(select(TestCase.tags).where(TestCase.project_id == project_id))
+    rows = result.all()
+    out: set[str] = set()
+    for row in rows:
+        if not row:
+            continue
+        for item in row:
+            if isinstance(item, str) and item.strip():
+                out.add(item.strip())
+    return sorted(out, key=str.lower)
 
 
 async def get_by_id(db: AsyncSession, test_case_id: str) -> TestCase | None:

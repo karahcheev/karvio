@@ -23,6 +23,12 @@ export function useTestCasesPage() {
     projectId,
     selectedStatuses: filters.selectedStatuses,
     selectedPriorities: filters.selectedPriorities,
+    selectedTags: filters.selectedTags,
+    selectedTypes: filters.selectedTypes,
+    selectedProducts: filters.selectedProducts,
+    selectedComponents: filters.selectedComponents,
+    selectedOwnerId: filters.selectedOwnerId,
+    includeNestedSuites: filters.includeNestedSuites,
     searchQuery: filters.searchQuery,
     sorting: filters.sorting,
   });
@@ -73,6 +79,12 @@ export function useTestCasesPage() {
                     filters.selectedPriorities.size > 0
                       ? Array.from(filters.selectedPriorities)
                       : undefined,
+                  tags: filters.selectedTags.size > 0 ? Array.from(filters.selectedTags) : undefined,
+                  testCaseTypes: filters.selectedTypes.size > 0 ? Array.from(filters.selectedTypes) : undefined,
+                  productIds: filters.selectedProducts.size > 0 ? Array.from(filters.selectedProducts) : undefined,
+                  componentIds:
+                    filters.selectedComponents.size > 0 ? Array.from(filters.selectedComponents) : undefined,
+                  ownerId: filters.selectedOwnerId ?? undefined,
                   search: filters.searchQuery.trim() || undefined,
                 },
         });
@@ -87,7 +99,20 @@ export function useTestCasesPage() {
         setIsExporting(false);
       }
     },
-    [projectId, isExporting, selection.selectedTests, data.selectedSuiteIdsForFilter, filters.selectedStatuses, filters.selectedPriorities, filters.searchQuery],
+    [
+      projectId,
+      isExporting,
+      selection.selectedTests,
+      data.selectedSuiteIdsForFilter,
+      filters.selectedStatuses,
+      filters.selectedPriorities,
+      filters.selectedTags,
+      filters.selectedTypes,
+      filters.selectedProducts,
+      filters.selectedComponents,
+      filters.selectedOwnerId,
+      filters.searchQuery,
+    ],
   );
 
   const [deletingTestCaseId, setDeletingTestCaseId] = useState<string | null>(null);
@@ -213,9 +238,25 @@ export function useTestCasesPage() {
       activeFiltersCount: filters.activeFiltersCount,
       selectedStatuses: filters.selectedStatuses,
       selectedPriorities: filters.selectedPriorities,
+      selectedTags: filters.selectedTags,
+      selectedTypes: filters.selectedTypes,
+      selectedProducts: filters.selectedProducts,
+      selectedComponents: filters.selectedComponents,
+      selectedOwnerId: filters.selectedOwnerId,
+      includeNestedSuites: filters.includeNestedSuites,
+      tagOptions: data.tagOptions,
+      ownerOptions: data.ownerOptions,
+      productOptions: data.productOptions,
+      componentOptions: data.componentOptions,
       onToggleFilter: filters.toggleFilter,
+      onToggleOwner: filters.toggleOwner,
       setSelectedStatuses: filters.setSelectedStatuses,
       setSelectedPriorities: filters.setSelectedPriorities,
+      setSelectedTags: filters.setSelectedTags,
+      setSelectedTypes: filters.setSelectedTypes,
+      setSelectedProducts: filters.setSelectedProducts,
+      setSelectedComponents: filters.setSelectedComponents,
+      setIncludeNestedSuites: filters.setIncludeNestedSuites,
       onClearAllFilters: filters.clearAllFilters,
       onNewTestCaseClick: handleNewTestCaseClick,
       onExport: handleExport,
