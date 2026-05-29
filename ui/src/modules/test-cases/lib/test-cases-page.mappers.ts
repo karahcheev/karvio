@@ -43,6 +43,7 @@ export function mapTestCaseSorting(
     case "created":
       return "created_at";
     case "id":
+    case "testCaseId":
     case "tags":
     case "type":
     case "expectedTime":

@@ -334,8 +334,12 @@ export function TestCasePreviewPanel({
           <SidePanelSection title="Metadata">
             <SidePanelCard>
             <SidePanelMetaRow
-                label="ID"
+                label="KEY"
                 value={testCase.id}
+              />
+              <SidePanelMetaRow
+                label="ID"
+                value={<span className="font-mono text-sm">{testCase.testCaseId}</span>}
               />
               <SidePanelMetaRow
                 label="Status"

@@ -64,6 +64,7 @@ export type NewTestCaseForm = {
 
 export type TestCaseColumn =
   | "id"
+  | "testCaseId"
   | "title"
   | "suite"
   | "tags"
