@@ -63,8 +63,8 @@ export function TestCasesTable({
     () => [
       {
         id: "id",
-        label: "ID",
-        menuLabel: "ID",
+        label: "KEY",
+        menuLabel: "KEY",
         defaultWidth: 110,
         minWidth: 50,
         locked: true,
@@ -79,6 +79,16 @@ export function TestCasesTable({
           >
             {test.id}
           </Link>
+        ),
+      },
+      {
+        id: "testCaseId",
+        label: "ID",
+        menuLabel: "ID",
+        defaultWidth: 280,
+        minWidth: 50,
+        renderCell: (test) => (
+          <span className="block truncate font-mono text-sm text-[var(--muted-foreground)]">{test.testCaseId}</span>
         ),
       },
       {
