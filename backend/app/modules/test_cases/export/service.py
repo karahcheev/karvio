@@ -74,6 +74,7 @@ async def _collect_filtered_cases(
             suite_ids=query.suite_id,
             tags=query.tag,
             owner_id=query.owner_id,
+            test_case_types=query.test_case_type,
             product_ids=query.product_id,
             component_ids=query.component_id,
             minimum_component_risk_level=query.minimum_component_risk_level,

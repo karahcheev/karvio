@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import String, and_, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -32,7 +32,11 @@ async def list_by_project(
     if tags:
         normalized_tags = [t.strip() for t in tags if t.strip()]
         if normalized_tags:
-            conditions.append(or_(TestPlan.tags.contains([t]) for t in normalized_tags))
+            # `tags` is a JSON column. JSON has no LIKE/containment operator in Postgres, so match
+            # against the serialized text (e.g. '["alpha","beta"]') by the quoted element. Works on
+            # both SQLite (tests) and Postgres, mirroring the test_cases repository.
+            tags_as_text = cast(TestPlan.tags, String)
+            conditions.append(or_(*[tags_as_text.ilike(f'%"{t}"%') for t in normalized_tags]))
     if milestone_ids:
         normalized_milestone_ids = [value.strip() for value in milestone_ids if value.strip()]
         if normalized_milestone_ids:

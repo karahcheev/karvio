@@ -15,6 +15,7 @@ import {
   getTestCaseSteps,
   getTestCases,
   getTestCasesPage,
+  getTestCaseTags,
   patchSuite,
   patchTestCase,
   replaceTestCaseSteps,
@@ -52,6 +53,14 @@ export function useTestCasesQuery(
       ? queryKeys.testCases.list(projectId, sortBy, sortDirection)
       : queryKeys.testCases.list("unknown", sortBy, sortDirection),
     queryFn: () => getTestCases(projectId ?? "", { sortBy, sortDirection }),
+    enabled: Boolean(projectId),
+  });
+}
+
+export function useTestCaseTagsQuery(projectId: string | undefined) {
+  return useQuery({
+    queryKey: projectId ? queryKeys.testCases.tagValues(projectId) : queryKeys.testCases.tagValues("unknown"),
+    queryFn: () => getTestCaseTags(projectId ?? ""),
     enabled: Boolean(projectId),
   });
 }

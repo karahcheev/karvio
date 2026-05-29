@@ -25,6 +25,7 @@ from app.modules.test_cases.schemas.case import (
     TestCasePatch,
     TestCaseRead,
     TestCasesList,
+    TestCaseTagsList,
 )
 from app.core import application_events
 from app.modules.audit.services import audit as audit_service
@@ -175,6 +176,7 @@ async def list_test_cases(
         suite_ids=query.suite_id,
         tags=query.tag,
         owner_id=query.owner_id,
+        test_case_types=query.test_case_type,
         product_ids=query.product_id,
         component_ids=query.component_id,
         minimum_component_risk_level=query.minimum_component_risk_level,
@@ -210,6 +212,12 @@ async def list_test_cases(
         has_next=result.has_next,
         total=result.total or 0,
     )
+
+
+async def list_test_case_tags(db: AsyncSession, *, project_id: str, current_user: User) -> TestCaseTagsList:
+    await ensure_project_role(db, current_user, project_id, ProjectMemberRole.viewer)
+    items = await test_case_repo.distinct_tags_for_project(db, project_id=project_id)
+    return TestCaseTagsList(items=items)
 
 
 async def create_test_case(db: AsyncSession, *, payload: TestCaseCreate, current_user: User) -> TestCaseRead:

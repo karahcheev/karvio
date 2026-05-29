@@ -5,6 +5,12 @@ import type { TestCaseColumn } from "../utils/types";
 export function useTestCasesFilters() {
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
   const [selectedPriorities, setSelectedPriorities] = useState<Set<string>>(new Set());
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [selectedComponents, setSelectedComponents] = useState<Set<string>>(new Set());
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string | null>(null);
+  const [includeNestedSuites, setIncludeNestedSuites] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<UnifiedTableSorting<TestCaseColumn>>({
     column: "lastRun",
@@ -12,7 +18,15 @@ export function useTestCasesFilters() {
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const activeFiltersCount = selectedStatuses.size + selectedPriorities.size;
+  const activeFiltersCount =
+    selectedStatuses.size +
+    selectedPriorities.size +
+    selectedTags.size +
+    selectedTypes.size +
+    selectedProducts.size +
+    selectedComponents.size +
+    (selectedOwnerId ? 1 : 0) +
+    (includeNestedSuites ? 0 : 1);
 
   const toggleFilter = useCallback(
     (filterSet: Set<string>, setFilter: (set: Set<string>) => void, value: string) => {
@@ -24,9 +38,19 @@ export function useTestCasesFilters() {
     [],
   );
 
+  const toggleOwner = useCallback((value: string) => {
+    setSelectedOwnerId((current) => (current === value ? null : value));
+  }, []);
+
   const clearAllFilters = useCallback(() => {
     setSelectedStatuses(new Set());
     setSelectedPriorities(new Set());
+    setSelectedTags(new Set());
+    setSelectedTypes(new Set());
+    setSelectedProducts(new Set());
+    setSelectedComponents(new Set());
+    setSelectedOwnerId(null);
+    setIncludeNestedSuites(true);
     setFiltersOpen(false);
   }, []);
 
@@ -44,6 +68,19 @@ export function useTestCasesFilters() {
     setSelectedStatuses,
     selectedPriorities,
     setSelectedPriorities,
+    selectedTags,
+    setSelectedTags,
+    selectedTypes,
+    setSelectedTypes,
+    selectedProducts,
+    setSelectedProducts,
+    selectedComponents,
+    setSelectedComponents,
+    selectedOwnerId,
+    setSelectedOwnerId,
+    toggleOwner,
+    includeNestedSuites,
+    setIncludeNestedSuites,
     searchQuery,
     setSearchQuery,
     sorting,

@@ -74,6 +74,7 @@ export async function getTestCasesPage(params: {
   minimumComponentRiskLevel?: ComponentRiskLevel;
   tags?: string[];
   ownerId?: string;
+  testCaseTypes?: string[];
   /** Search by title, key, or tags. Case-insensitive partial match. */
   search?: string;
   sortBy?: TestCasesSortBy;
@@ -107,10 +108,19 @@ export async function getTestCasesPage(params: {
     if (tag) query.append("tag", tag);
   });
   if (params.ownerId) query.set("owner_id", params.ownerId);
+  params.testCaseTypes?.forEach((type) => {
+    if (type) query.append("test_case_type", type);
+  });
   if (params.search?.trim()) query.set("search", params.search.trim());
   if (params.sortBy) query.set("sort_by", params.sortBy);
   if (params.sortOrder) query.set("sort_order", params.sortOrder);
   return apiRequest<TestCasesPageResponse>(`/test-cases?${query.toString()}`);
+}
+
+export async function getTestCaseTags(projectId: string): Promise<string[]> {
+  const query = new URLSearchParams({ project_id: projectId });
+  const result = await apiRequest<{ items: string[] }>(`/test-cases/tags?${query.toString()}`);
+  return result.items;
 }
 
 export type TestCaseExportFormat =
@@ -155,6 +165,9 @@ export type TestCasesExportFilters = {
   priorities?: string[];
   tags?: string[];
   ownerId?: string;
+  testCaseTypes?: string[];
+  productIds?: string[];
+  componentIds?: string[];
   search?: string;
 };
 
@@ -175,6 +188,9 @@ export async function downloadTestCasesExport(
     filters.priorities?.forEach((priority) => priority && query.append("priority", priority));
     filters.tags?.forEach((tag) => tag && query.append("tag", tag));
     if (filters.ownerId) query.set("owner_id", filters.ownerId);
+    filters.testCaseTypes?.forEach((type) => type && query.append("test_case_type", type));
+    filters.productIds?.forEach((productId) => productId && query.append("product_id", productId));
+    filters.componentIds?.forEach((componentId) => componentId && query.append("component_id", componentId));
     if (filters.search?.trim()) query.set("search", filters.search.trim());
   }
   const response = await apiFetch(`/test-cases/export?${query.toString()}`);

@@ -63,9 +63,9 @@ export function FiltersPopover({
       </Button>
 
       {open ? (
-        <div className={cn("absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-[var(--border)] bg-[var(--popover)] shadow-lg", panelClassName)}>
+        <div className={cn("absolute right-0 top-full z-50 mt-2 flex max-h-[min(70vh,32rem)] w-80 flex-col rounded-lg border border-[var(--border)] bg-[var(--popover)] shadow-lg", panelClassName)}>
           {/* Panel header */}
-          <div className="border-b border-[var(--border)] p-3">
+          <div className="shrink-0 border-b border-[var(--border)] p-3">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-[var(--popover-foreground)]">{title}</h3>
               <Button
@@ -80,8 +80,8 @@ export function FiltersPopover({
             </div>
           </div>
 
-          {/* Filter controls */}
-          <div className="space-y-4 p-3">{children}</div>
+          {/* Filter controls (scrolls when content exceeds the panel height) */}
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">{children}</div>
         </div>
       ) : null}
     </div>
