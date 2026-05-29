@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   type AiDraftTestCaseDto,
   uploadDraftStepAttachment,
@@ -11,6 +11,7 @@ import {
   useReplaceTestCaseStepsMutation,
 } from "@/shared/api";
 import { notifyError, notifySuccess } from "@/shared/lib/notifications";
+import { getSessionUser } from "@/shared/auth";
 import type { NewTestCaseForm } from "../utils/types";
 import { createDefaultNewTestCaseForm } from "../utils/newTestCaseForm";
 import { createLocalCoverage, createLocalStep, normalizeCoveragesForSave, normalizeStepsForSave, validateFileSize } from "../utils/testCaseEditorUtils";
@@ -113,7 +114,20 @@ async function replaceStepsWithInlineImages(options: {
   await replaceSteps({ testCaseId, projectId, steps: stepsPayload });
 }
 
-export function useTestCasesCreate(selectedSuite: string | null, projectId: string | undefined) {
+export function useTestCasesCreate(
+  selectedSuite: string | null,
+  projectId: string | undefined,
+  ownerOptions: ReadonlyArray<{ id: string }>,
+) {
+  // Pre-select the current user as owner, but only if they are a member of this project.
+  const defaultOwnerId = useMemo(() => {
+    const sessionUser = getSessionUser();
+    if (sessionUser && ownerOptions.some((owner) => owner.id === sessionUser.id)) {
+      return sessionUser.id;
+    }
+    return "unassigned";
+  }, [ownerOptions]);
+
   const aiStatusQuery = useAiTestCaseStatusQuery(projectId);
   const generateAiMutation = useGenerateAiTestCasesMutation();
   const checkAiDuplicatesMutation = useCheckAiDuplicatesMutation();
@@ -126,7 +140,7 @@ export function useTestCasesCreate(selectedSuite: string | null, projectId: stri
   const [uploadingStepId, setUploadingStepId] = useState<string | null>(null);
   const [pendingInlineImagesByStepId, setPendingInlineImagesByStepId] = useState<Record<string, PendingInlineImage[]>>({});
   const [pendingPreconditionInlineImages, setPendingPreconditionInlineImages] = useState<PendingInlineImage[]>([]);
-  const [newTestCase, setNewTestCase] = useState<NewTestCaseForm>(() => createDefaultNewTestCaseForm());
+  const [newTestCase, setNewTestCase] = useState<NewTestCaseForm>(() => createDefaultNewTestCaseForm(defaultOwnerId));
   const [aiSourceText, setAiSourceText] = useState("");
   const [aiDrafts, setAiDrafts] = useState<AiDraftTestCaseDto[]>([]);
   const [aiWarnings, setAiWarnings] = useState<string[]>([]);
@@ -136,12 +150,12 @@ export function useTestCasesCreate(selectedSuite: string | null, projectId: stri
     setIsCreatingTestCase(true);
     setPendingInlineImagesByStepId({});
     setPendingPreconditionInlineImages([]);
-    setNewTestCase(createDefaultNewTestCaseForm());
+    setNewTestCase(createDefaultNewTestCaseForm(defaultOwnerId));
     setAiSourceText("");
     setAiDrafts([]);
     setAiWarnings([]);
     setDuplicateWarnings([]);
-  }, []);
+  }, [defaultOwnerId]);
 
   const handleCancelNewTestCase = useCallback(() => {
     setIsCreatingTestCase(false);
@@ -149,12 +163,12 @@ export function useTestCasesCreate(selectedSuite: string | null, projectId: stri
     setPendingInlineImagesByStepId({});
     setPendingPreconditionInlineImages([]);
     setUploadingStepId(null);
-    setNewTestCase(createDefaultNewTestCaseForm());
+    setNewTestCase(createDefaultNewTestCaseForm(defaultOwnerId));
     setAiSourceText("");
     setAiDrafts([]);
     setAiWarnings([]);
     setDuplicateWarnings([]);
-  }, []);
+  }, [defaultOwnerId]);
 
   const createFromForm = useCallback(
     async (
@@ -519,6 +533,7 @@ export function useTestCasesCreate(selectedSuite: string | null, projectId: stri
   return {
     isCreatingTestCase,
     isSubmittingCreate,
+    defaultOwnerId,
     newTestCase,
     setNewTestCase,
     onNewTestCaseClick: handleNewTestCaseClick,

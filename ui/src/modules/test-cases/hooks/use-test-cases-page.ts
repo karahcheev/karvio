@@ -32,7 +32,7 @@ export function useTestCasesPage() {
   });
 
   const selection = useTestCasesSelection();
-  const create = useTestCasesCreate(suiteTree.selectedSuite, projectId);
+  const create = useTestCasesCreate(suiteTree.selectedSuite, projectId, data.ownerOptions);
 
   const preview = useTestCasesPreview(
     data.testCases,
@@ -306,6 +306,7 @@ export function useTestCasesPage() {
       isSubmitting: create.isSubmittingCreate,
       projectId,
       ownerOptions: data.ownerOptions,
+      defaultOwnerId: create.defaultOwnerId,
       selectedSuite: suiteTree.selectedSuite,
       suites: suiteTree.suitesWithMeta,
       newTestCase: create.newTestCase,

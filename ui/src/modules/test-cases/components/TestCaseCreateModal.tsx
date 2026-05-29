@@ -32,6 +32,7 @@ type Props = Readonly<{
   isSubmitting: boolean;
   projectId: string | undefined;
   ownerOptions: TestCaseCreateOwnerOption[];
+  defaultOwnerId: string;
   selectedSuite: string | null;
   suites: SuiteNode[];
   newTestCase: NewTestCaseForm;
@@ -78,6 +79,7 @@ export function TestCaseCreateModal({
   isSubmitting,
   projectId,
   ownerOptions,
+  defaultOwnerId,
   selectedSuite,
   suites,
   newTestCase,
@@ -121,7 +123,7 @@ export function TestCaseCreateModal({
   const handlePointerDownOutside = useCallback<NonNullable<ComponentProps<typeof DialogContent>["onPointerDownOutside"]>>(
     (event) => {
       if (isSubmitting) return;
-      if (!isNewTestCaseFormDirty(newTestCase)) return;
+      if (!isNewTestCaseFormDirty(newTestCase, defaultOwnerId)) return;
       event.preventDefault();
       void confirmDelete({
         title: "Close without saving?",
@@ -132,7 +134,7 @@ export function TestCaseCreateModal({
         if (confirmed) onCancel();
       });
     },
-    [confirmDelete, isSubmitting, newTestCase, onCancel]
+    [confirmDelete, defaultOwnerId, isSubmitting, newTestCase, onCancel]
   );
 
   if (!isOpen) return null;
