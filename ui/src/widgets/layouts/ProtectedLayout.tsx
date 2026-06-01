@@ -1,10 +1,11 @@
 // Auth gate: restore session on load; unauthenticated users go to login.
 import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { getMe } from "@/shared/api";
 import { clearSession, setSessionUser } from "@/shared/auth";
 
 export function ProtectedLayout() {
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
 
@@ -43,7 +44,9 @@ export function ProtectedLayout() {
     return <div className="flex min-h-screen items-center justify-center bg-[var(--background)] text-sm text-[var(--muted-foreground)]">Loading...</div>;
   }
   if (!authenticated) {
-    return <Navigate to="/login" replace />;
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    const target = returnTo === "/" ? "/login" : `/login?return_to=${encodeURIComponent(returnTo)}`;
+    return <Navigate to={target} replace />;
   }
   return <Outlet />;
 }
