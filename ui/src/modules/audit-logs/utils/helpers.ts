@@ -1,5 +1,4 @@
 import type { AuditChangeItem } from "./types";
-import type { AuditLogDto } from "@/shared/api";
 import { IGNORED_CHANGE_FIELDS, WRITE_ACTION_HINTS } from "./constants";
 
 export function formatUtcTimestamp(value: string): string {
@@ -92,17 +91,4 @@ export function isIgnoredChangePath(path: string): boolean {
   const normalizedPath = path.replace(/\[\d+\]/g, "");
   const lastSegment = normalizedPath.split(".").at(-1) ?? normalizedPath;
   return IGNORED_CHANGE_FIELDS.has(lastSegment);
-}
-
-export function mergeUniqueByEventId(current: AuditLogDto[], incoming: AuditLogDto[]): AuditLogDto[] {
-  const byId = new Map<string, AuditLogDto>();
-  for (const item of current) {
-    byId.set(item.event_id, item);
-  }
-  for (const item of incoming) {
-    byId.set(item.event_id, item);
-  }
-  return [...byId.values()].sort(
-    (left, right) => new Date(right.timestamp_utc).getTime() - new Date(left.timestamp_utc).getTime()
-  );
 }

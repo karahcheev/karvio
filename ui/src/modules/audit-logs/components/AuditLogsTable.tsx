@@ -84,10 +84,16 @@ type Props = Readonly<{
   columnsOpen: boolean;
   selectedLogEventId: string | null;
   sorting: UnifiedTableSorting<AuditColumn>;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  pageSizeOptions: number[];
   onColumnsOpenChange: (open: boolean) => void;
   onSortingChange: (sorting: UnifiedTableSorting<AuditColumn>) => void;
   onToggleColumn: (column: AuditColumn) => void;
   onRowClick: (item: AuditTableRow) => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }>;
 
 export function AuditLogsTable({
@@ -96,10 +102,16 @@ export function AuditLogsTable({
   columnsOpen,
   selectedLogEventId,
   sorting,
+  page,
+  pageSize,
+  totalPages,
+  pageSizeOptions,
   onColumnsOpenChange,
   onSortingChange,
   onToggleColumn,
   onRowClick,
+  onPageChange,
+  onPageSizeChange,
 }: Props) {
   return (
     <UnifiedTable
@@ -118,6 +130,16 @@ export function AuditLogsTable({
       sorting={{
         value: sorting,
         onChange: onSortingChange,
+      }}
+      pagination={{
+        enabled: true,
+        mode: "server",
+        page,
+        pageSize,
+        totalPages,
+        pageSizeOptions,
+        onPageChange,
+        onPageSizeChange,
       }}
     />
   );
