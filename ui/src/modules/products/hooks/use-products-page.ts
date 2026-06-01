@@ -38,8 +38,8 @@ export function useProductsPage() {
   const { isOpen: productColumnsOpen, setIsOpen: setProductColumnsOpen } = useDisclosure(false);
   const { isOpen: componentColumnsOpen, setIsOpen: setComponentColumnsOpen } = useDisclosure(false);
 
-  const { visibleColumns: productVisibleColumns, toggleColumn: toggleProductColumn } = useColumnVisibility<ProductColumn>(DEFAULT_PRODUCT_COLUMNS);
-  const { visibleColumns: componentVisibleColumns, toggleColumn: toggleComponentColumn } = useColumnVisibility<ComponentColumn>(DEFAULT_COMPONENT_COLUMNS);
+  const { visibleColumns: productVisibleColumns, toggleColumn: toggleProductColumn } = useColumnVisibility<ProductColumn>(DEFAULT_PRODUCT_COLUMNS, "products");
+  const { visibleColumns: componentVisibleColumns, toggleColumn: toggleComponentColumn } = useColumnVisibility<ComponentColumn>(DEFAULT_COMPONENT_COLUMNS, "components");
 
   const [selectedProductStatuses, setSelectedProductStatuses] = useState<Set<ProductStatus>>(new Set());
   const [selectedComponentStatuses, setSelectedComponentStatuses] = useState<Set<ProductStatus>>(new Set());

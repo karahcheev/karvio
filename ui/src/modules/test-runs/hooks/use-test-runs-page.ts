@@ -64,7 +64,7 @@ export function useTestRunsPage() {
   const { isOpen: createRunOpen, open: openCreateRun, close: closeCreateRun } = useDisclosure(false);
   const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useSearchState("");
   const debouncedSearchQuery = useDebouncedValue(searchQuery, LIST_SEARCH_DEBOUNCE_MS);
-  const { visibleColumns, toggleColumn } = useColumnVisibility<TestRunColumn>(DEFAULT_VISIBLE_COLUMNS);
+  const { visibleColumns, toggleColumn } = useColumnVisibility<TestRunColumn>(DEFAULT_VISIBLE_COLUMNS, "test-runs");
   const { sorting, setSorting } = useTableSorting<TestRunColumn>(DEFAULT_SORTING);
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
   const [selectedEnvironmentIds, setSelectedEnvironmentIds] = useState<Set<string>>(new Set());

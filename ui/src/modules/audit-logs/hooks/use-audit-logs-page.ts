@@ -42,7 +42,7 @@ export function useAuditLogsPage() {
   const { isOpen: columnsOpen, setIsOpen: setColumnsOpen } = useDisclosure(false);
   const { isOpen: filtersOpen, setIsOpen: setFiltersOpen } = useDisclosure(false);
   const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useSearchState("");
-  const { visibleColumns, toggleColumn } = useColumnVisibility<AuditColumn>(DEFAULT_VISIBLE_COLUMNS);
+  const { visibleColumns, toggleColumn } = useColumnVisibility<AuditColumn>(DEFAULT_VISIBLE_COLUMNS, "audit-logs");
   const { sorting, setSorting } = useTableSorting<AuditColumn>(DEFAULT_SORTING);
   const [logs, setLogs] = useState<AuditLogDto[]>([]);
   const [nextPage, setNextPage] = useState<number | null>(1);
