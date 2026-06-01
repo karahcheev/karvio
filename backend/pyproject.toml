@@ -1,6 +1,6 @@
 [project]
 name = "karvio-backend"
-version = "1.4.3"
+version = "1.4.4"
 description = "Karvio backend API"
 requires-python = ">=3.11"
 dependencies = [
