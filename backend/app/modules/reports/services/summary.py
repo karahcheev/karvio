@@ -117,8 +117,7 @@ def _aggregate_overview_runs(
         run_in_progress = counts.get(RunItemStatus.in_progress.value, 0)
         run_xfailed = counts.get(RunItemStatus.xfailed.value, 0)
         run_xpassed = counts.get(RunItemStatus.xpassed.value, 0)
-        run_decided = run_passed + run_error + run_failure + run_xfailed + run_xpassed
-        run_pass_rate = round((run_passed / run_decided) * 100, 2) if run_decided else 0.0
+        run_pass_rate = round((run_passed / run_total) * 100, 2) if run_total else 0.0
 
         agg.total += run_total
         agg.passed += run_passed
@@ -181,7 +180,6 @@ def _build_overview_trend_series(
     status_trend: list[dict] = []
     for bucket_start in sorted(bucket_totals):
         bucket = bucket_totals[bucket_start]
-        bucket_decided = bucket["passed"] + bucket["error"] + bucket["failure"] + bucket["xfailed"] + bucket["xpassed"]
         bucket_total = (
             bucket["passed"]
             + bucket["error"]
@@ -193,7 +191,7 @@ def _build_overview_trend_series(
             + bucket["xfailed"]
             + bucket["xpassed"]
         )
-        bucket_pass_rate = round((bucket["passed"] / bucket_decided) * 100, 2) if bucket_decided else 0.0
+        bucket_pass_rate = round((bucket["passed"] / bucket_total) * 100, 2) if bucket_total else 0.0
         bucket_start_iso = bucket_start.isoformat()
         bucket_label = _bucket_label(bucket_start, granularity)
         execution_trend.append(
@@ -325,8 +323,7 @@ async def build_run_report_payload(db: AsyncSession, *, run: TestRun) -> dict:
     xpassed = status_counts.get(RunItemStatus.xpassed.value, 0)
     untested = status_counts.get(RunItemStatus.untested.value, 0)
     in_progress = status_counts.get(RunItemStatus.in_progress.value, 0)
-    decided = passed + error + failure + xfailed + xpassed
-    pass_rate = round((passed / decided) * 100, 2) if decided else 0.0
+    pass_rate = round((passed / total) * 100, 2) if total else 0.0
     completed = passed + error + failure + blocked + skipped + xfailed + xpassed
     progress_rate = round((completed / total) * 100, 2) if total else 0.0
 
@@ -407,8 +404,7 @@ def build_project_overview_payload(
     runs_by_build_counts = agg.runs_by_build_counts
 
     active_runs = sum(1 for run in runs if run.status == TestRunStatus.in_progress)
-    decided_total = passed + error + failure + xfailed + xpassed
-    pass_rate = round((passed / decided_total) * 100, 2) if decided_total else 0.0
+    pass_rate = round((passed / total) * 100, 2) if total else 0.0
 
     status_distribution = [
         {"name": "Passed", "value": passed},

@@ -65,7 +65,6 @@ export function getRunProgressBarModel(run: RunProgressBarCounts): RunProgressBa
     ...segment,
     width: denom > 0 ? (segment.count / denom) * 100 : 0,
   }));
-  const decided = run.passed + run.error + run.failure + xf + xp;
-  const passRate = decided > 0 ? Math.round((run.passed / decided) * 100) : 0;
+  const passRate = total > 0 ? Math.round((run.passed / total) * 100) : 0;
   return { progress: run.progress, passRate, segments };
 }

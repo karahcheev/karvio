@@ -154,14 +154,9 @@ async def get_milestone_summary(
         counters[key] = counters.get(key, 0) + count
         total_tests += count
 
-    decided = (
-        counters[RunItemStatus.passed.value]
-        + counters[RunItemStatus.error.value]
-        + counters[RunItemStatus.failure.value]
-        + counters[RunItemStatus.xfailed.value]
-        + counters[RunItemStatus.xpassed.value]
+    pass_rate = (
+        round((counters[RunItemStatus.passed.value] / total_tests) * 100, 2) if total_tests else 0.0
     )
-    pass_rate = round((counters[RunItemStatus.passed.value] / decided) * 100, 2) if decided else 0.0
 
     overdue = (
         milestone.target_date is not None

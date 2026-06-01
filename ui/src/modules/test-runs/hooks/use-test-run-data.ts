@@ -107,12 +107,11 @@ export function useTestRunData({ runId, sorting, statuses, assigneeId, search }:
   } else if (total > 0) {
     progress = Math.round((completed / total) * 100);
   }
-  const decided = summary.error + summary.failure + passed + xfailed + xpassed;
   let passRate = 0;
   if (summary.pass_rate != null && Number.isFinite(summary.pass_rate)) {
     passRate = Math.round(summary.pass_rate);
-  } else if (decided > 0) {
-    passRate = Math.round((passed / decided) * 100);
+  } else if (total > 0) {
+    passRate = Math.round((passed / total) * 100);
   }
   const statusCounts = statusBreakdown;
 
