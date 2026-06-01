@@ -71,8 +71,7 @@ def _summary_tuple_from_count_rows(
     skipped = mapping.get(RunItemStatus.skipped.value, 0)
     xfailed = mapping.get(RunItemStatus.xfailed.value, 0)
     xpassed = mapping.get(RunItemStatus.xpassed.value, 0)
-    decided = passed + error + failure + xfailed + xpassed
-    pass_rate = round((passed / decided) * 100, 2) if decided else 0.0
+    pass_rate = round((passed / total) * 100, 2) if total else 0.0
     summary = RunSummarySnapshot(
         total=total,
         passed=passed,

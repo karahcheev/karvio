@@ -176,8 +176,9 @@ async def list_test_runs(
         summary.total += count
 
     for summary in summary_by_run_id.values():
-        decided = summary.passed + summary.error + summary.failure + summary.xfailed + summary.xpassed
-        summary.pass_rate = round((summary.passed / decided) * 100, 2) if decided else 0.0
+        summary.pass_rate = (
+            round((summary.passed / summary.total) * 100, 2) if summary.total else 0.0
+        )
 
     return TestRunsList(
         items=[

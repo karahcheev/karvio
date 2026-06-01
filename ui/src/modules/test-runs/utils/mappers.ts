@@ -56,13 +56,11 @@ export function mapTestRunToView(run: TestRunDto): RunView {
     }
   }
 
-  const decided =
-    summary.passed + summary.error + summary.failure + (summary.xfailed ?? 0) + (summary.xpassed ?? 0);
   let passRate = 0;
   if (summary.pass_rate != null && Number.isFinite(summary.pass_rate)) {
     passRate = Math.round(summary.pass_rate);
-  } else if (decided > 0) {
-    passRate = Math.round((summary.passed / decided) * 100);
+  } else if (summary.total > 0) {
+    passRate = Math.round((summary.passed / summary.total) * 100);
   }
 
   return {
