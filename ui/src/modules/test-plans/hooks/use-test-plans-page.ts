@@ -39,7 +39,7 @@ export function useTestPlansPage(options?: { loadSelectedPlanDetail?: boolean })
   const debouncedSearchQuery = useDebouncedValue(searchQuery, LIST_SEARCH_DEBOUNCE_MS);
   const { isOpen: filtersOpen, setIsOpen: setFiltersOpen } = useDisclosure(false);
   const { isOpen: columnsOpen, setIsOpen: setColumnsOpen } = useDisclosure(false);
-  const { visibleColumns, toggleColumn } = useColumnVisibility<TestPlanColumn>(DEFAULT_VISIBLE_COLUMNS);
+  const { visibleColumns, toggleColumn } = useColumnVisibility<TestPlanColumn>(DEFAULT_VISIBLE_COLUMNS, "test-plans");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [selectedMilestoneIds, setSelectedMilestoneIds] = useState<Set<string>>(new Set());
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
