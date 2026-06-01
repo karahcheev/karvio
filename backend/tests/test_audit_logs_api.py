@@ -177,3 +177,49 @@ async def test_audit_logs_support_sorting_and_page_pagination(client, db_session
     by_actor = await client.get("/api/v1/audit-logs?sort_by=actor&sort_order=asc", headers=admin_headers)
     assert by_actor.status_code == 200
     assert [item["actor_id"] for item in by_actor.json()["items"]] == [None, actor_alpha.id, actor_bravo.id]
+
+
+async def test_audit_logs_search_matches_across_fields_and_actor(client, db_session: AsyncSession, admin_headers):
+    actor = User(id="audit_search_actor", username="searchable_actor", password_hash="hash")
+    log_action = AuditLog(
+        event_id="audit_search_action",
+        actor_id=None,
+        actor_type=AuditActorType.system,
+        action="project.archive",
+        resource_type="project",
+        resource_id="proj_x",
+        result=AuditResult.success,
+        request_id="req-search-1",
+    )
+    log_actor = AuditLog(
+        event_id="audit_search_actor_evt",
+        actor_id=actor.id,
+        actor_type=AuditActorType.user,
+        action="user.update",
+        resource_type="user",
+        resource_id="user_x",
+        result=AuditResult.success,
+        request_id="req-search-2",
+    )
+    log_other = AuditLog(
+        event_id="audit_search_other",
+        actor_id=None,
+        actor_type=AuditActorType.system,
+        action="dataset.create",
+        resource_type="dataset",
+        resource_id="ds_x",
+        result=AuditResult.success,
+        request_id="req-search-3",
+    )
+    db_session.add_all([actor, log_action, log_actor, log_other])
+    await db_session.commit()
+
+    # Free-text search must match across audit fields (action) ...
+    by_action = await client.get("/api/v1/audit-logs", params={"search": "archive"}, headers=admin_headers)
+    assert by_action.status_code == 200
+    assert [item["event_id"] for item in by_action.json()["items"]] == [log_action.event_id]
+
+    # ... and across the joined actor username, not just the loaded page.
+    by_actor = await client.get("/api/v1/audit-logs", params={"search": "searchable_actor"}, headers=admin_headers)
+    assert by_actor.status_code == 200
+    assert [item["event_id"] for item in by_actor.json()["items"]] == [log_actor.event_id]

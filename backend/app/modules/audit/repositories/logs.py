@@ -25,6 +25,7 @@ async def list_audit_logs(
     resource_type: str | None,
     resource_id: str | None,
     result: AuditResult | None,
+    search: str | None,
     page: int,
     page_size: int,
     sort_by: AuditLogSortField,
@@ -58,6 +59,17 @@ async def list_audit_logs(
         stmt = stmt.where(AuditLog.resource_id == resource_id)
     if result is not None:
         stmt = stmt.where(AuditLog.result == result)
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        stmt = stmt.where(
+            AuditLog.action.ilike(pattern)
+            | AuditLog.resource_type.ilike(pattern)
+            | AuditLog.resource_id.ilike(pattern)
+            | AuditLog.request_id.ilike(pattern)
+            | AuditLog.ip.ilike(pattern)
+            | AuditLog.event_id.ilike(pattern)
+            | User.username.ilike(pattern)
+        )
     sort_order = sort_value_expr.asc() if sort_direction == "asc" else sort_value_expr.desc()
     id_order = AuditLog.event_id.asc() if sort_direction == "asc" else AuditLog.event_id.desc()
     offset = (page - 1) * page_size

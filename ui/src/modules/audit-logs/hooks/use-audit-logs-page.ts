@@ -1,40 +1,26 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys, useUsersQuery, getAuditLogs, type AuditLogDto } from "@/shared/api";
+import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { queryKeys, useUsersQuery, getAuditLogs } from "@/shared/api";
 import { getSessionUser } from "@/shared/auth";
 import { getLastProjectId } from "@/shared/lib/last-project";
 import type { AuditColumn, AuditFilters, AuditTableRow } from "@/modules/audit-logs/utils/types";
 import { DEFAULT_FILTERS } from "@/modules/audit-logs/utils/constants";
-import { mergeUniqueByEventId } from "@/modules/audit-logs/utils/helpers";
 import { useColumnVisibility, useDisclosure, useSearchState, useTableSorting } from "@/shared/hooks";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import type { UnifiedTableSorting } from "@/shared/ui/Table";
 import { mapAuditSorting } from "../utils/sorting";
 
 const DEFAULT_VISIBLE_COLUMNS: AuditColumn[] = ["timestamp", "actor", "action", "resource", "result", "request_id"];
 const DEFAULT_SORTING: UnifiedTableSorting<AuditColumn> = { column: "timestamp", direction: "desc" };
+const DEFAULT_PAGE_SIZE = 50;
+export const AUDIT_PAGE_SIZE_OPTIONS = [25, 50, 100, 200];
 
 function resolveAuditProjectScope(isAdmin: boolean, fallbackProjectId: string | undefined): string | undefined {
   if (isAdmin) return undefined;
   return getLastProjectId() ?? fallbackProjectId;
 }
 
-function abortAuditLoadWithoutProject(
-  mode: "replace" | "append",
-  setLogs: Dispatch<SetStateAction<AuditLogDto[]>>,
-  setHasNext: (value: boolean) => void,
-  setNextPage: (value: number | null) => void,
-  setError: (value: string | null) => void,
-): void {
-  if (mode === "replace") {
-    setLogs([]);
-    setHasNext(false);
-    setNextPage(null);
-  }
-  setError("Project context is required to load audit logs");
-}
-
 export function useAuditLogsPage() {
-  const queryClient = useQueryClient();
   const sessionUser = getSessionUser();
   const isAdmin = sessionUser?.role === "admin";
   const fallbackProjectId = sessionUser?.project_memberships[0]?.project_id;
@@ -44,16 +30,13 @@ export function useAuditLogsPage() {
   const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useSearchState("");
   const { visibleColumns, toggleColumn } = useColumnVisibility<AuditColumn>(DEFAULT_VISIBLE_COLUMNS, "audit-logs");
   const { sorting, setSorting } = useTableSorting<AuditColumn>(DEFAULT_SORTING);
-  const [logs, setLogs] = useState<AuditLogDto[]>([]);
-  const [nextPage, setNextPage] = useState<number | null>(1);
-  const [hasNext, setHasNext] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [draftFilters, setDraftFilters] = useState<AuditFilters>(DEFAULT_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState<AuditFilters>(DEFAULT_FILTERS);
   const [selectedLogEventId, setSelectedLogEventId] = useState<string | null>(null);
-  const requestSeqRef = useRef(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 250);
 
   const usersById = useMemo(() => new Map(users.map((user) => [user.id, user])), [users]);
   const actorOptions = useMemo(
@@ -66,94 +49,59 @@ export function useAuditLogsPage() {
     [users],
   );
 
-  const loadLogs = useCallback(
-    async (mode: "replace" | "append", page?: number | null) => {
-      const projectIdScope = resolveAuditProjectScope(isAdmin, fallbackProjectId);
+  const projectIdScope = resolveAuditProjectScope(isAdmin, fallbackProjectId);
+  const missingProjectScope = !isAdmin && !projectIdScope;
 
-      if (!isAdmin && !projectIdScope) {
-        abortAuditLoadWithoutProject(mode, setLogs, setHasNext, setNextPage, setError);
-        return;
-      }
+  // Reset to the first page whenever the result set changes shape.
+  useEffect(() => {
+    setPage(1);
+  }, [appliedFilters, debouncedSearchQuery, sorting.column, sorting.direction, pageSize]);
 
-      const requestSeq = ++requestSeqRef.current;
-      if (mode === "replace") setIsLoading(true);
-      else setIsLoadingMore(true);
-      setError(null);
-
-      const params = {
-        project_id: projectIdScope,
-        page: page ?? 1,
-        page_size: 100,
-        actor_id: appliedFilters.actorId || undefined,
-        action: appliedFilters.action || undefined,
-        resource_type: appliedFilters.resourceType || undefined,
-        resource_id: appliedFilters.resourceId || undefined,
-        result: appliedFilters.result === "all" ? undefined : appliedFilters.result,
-        sort_by: mapAuditSorting(sorting.column),
-        sort_order: sorting.direction,
-      };
-
-      try {
-        const response = await queryClient.fetchQuery({
-          queryKey: queryKeys.auditLogs.list(params),
-          queryFn: () => getAuditLogs(params),
-        });
-
-        if (requestSeq !== requestSeqRef.current) return;
-
-        setLogs((current) => (mode === "replace" ? response.items : mergeUniqueByEventId(current, response.items)));
-        setHasNext(response.has_next);
-        setNextPage(response.has_next ? response.page + 1 : null);
-      } catch {
-        if (requestSeq !== requestSeqRef.current) return;
-        setError("Failed to load audit logs");
-      } finally {
-        if (requestSeq === requestSeqRef.current) {
-          if (mode === "replace") setIsLoading(false);
-          else setIsLoadingMore(false);
-        }
-      }
-    },
-    [appliedFilters, fallbackProjectId, isAdmin, queryClient, sorting.column, sorting.direction],
+  const params = useMemo(
+    () => ({
+      project_id: projectIdScope,
+      page,
+      page_size: pageSize,
+      actor_id: appliedFilters.actorId || undefined,
+      action: appliedFilters.action || undefined,
+      resource_type: appliedFilters.resourceType || undefined,
+      resource_id: appliedFilters.resourceId || undefined,
+      result: appliedFilters.result === "all" ? undefined : appliedFilters.result,
+      search: debouncedSearchQuery.trim() || undefined,
+      sort_by: mapAuditSorting(sorting.column),
+      sort_order: sorting.direction,
+    }),
+    [appliedFilters, debouncedSearchQuery, page, pageSize, projectIdScope, sorting.column, sorting.direction],
   );
 
+  const logsQuery = useQuery({
+    queryKey: queryKeys.auditLogs.list(params),
+    queryFn: () => getAuditLogs(params),
+    enabled: !missingProjectScope,
+    placeholderData: keepPreviousData,
+  });
 
-  useEffect(() => {
-    void loadLogs("replace");
-  }, [loadLogs]);
+  const logs = useMemo(() => logsQuery.data?.items ?? [], [logsQuery.data]);
+  const hasNext = logsQuery.data?.has_next ?? false;
+  // Server lists return only has_next, so total page count is the current page (+1 if more exist).
+  const totalPages = Math.max(page, hasNext ? page + 1 : page, 1);
 
-  const filteredLogs = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return logs;
-
-    return logs.filter((item) => {
-      const actor = item.actor_id ? usersById.get(item.actor_id)?.username ?? item.actor_id : item.actor_type;
-      const haystack = [
-        item.event_id,
-        item.action,
-        item.resource_type ?? "",
-        item.resource_id ?? "",
-        actor,
-        item.request_id ?? "",
-        item.ip ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(query);
-    });
-  }, [logs, searchQuery, usersById]);
+  const error = missingProjectScope
+    ? "Project context is required to load audit logs"
+    : logsQuery.isError
+      ? "Failed to load audit logs"
+      : null;
 
   const tableRows = useMemo<AuditTableRow[]>(
     () =>
-      filteredLogs.map((item) => {
+      logs.map((item) => {
         const actor = item.actor_id ? usersById.get(item.actor_id) : null;
         const actorLabel = actor
-          ? ([actor.first_name, actor.last_name].filter(Boolean).join(" ").trim() || actor.username)
+          ? [actor.first_name, actor.last_name].filter(Boolean).join(" ").trim() || actor.username
           : item.actor_id ?? item.actor_type;
         return { ...item, actorLabel };
       }),
-    [filteredLogs, usersById],
+    [logs, usersById],
   );
 
   const selectedLog = useMemo(
@@ -179,10 +127,12 @@ export function useAuditLogsPage() {
       filtersOpen,
       searchQuery,
       visibleColumns,
-      nextPage,
+      page,
+      pageSize,
+      totalPages,
       hasNext,
-      isLoading,
-      isLoadingMore,
+      isLoading: logsQuery.isLoading,
+      isFetching: logsQuery.isFetching,
       error,
       draftFilters,
       selectedLogEventId,
@@ -196,7 +146,9 @@ export function useAuditLogsPage() {
       activeFiltersCount,
     },
     actions: {
-      loadLogs,
+      refresh: () => void logsQuery.refetch(),
+      setPage,
+      setPageSize,
       setColumnsOpen,
       setFiltersOpen,
       setSearchQuery,

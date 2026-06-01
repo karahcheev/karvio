@@ -23,6 +23,7 @@ class AuditLogListQuery(BaseModel):
     resource_type: str | None = None
     resource_id: str | None = None
     result: AuditResult | None = None
+    search: str | None = None
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=50, le=200)
     sort_by: AuditLogSortField = "timestamp_utc"

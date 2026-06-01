@@ -48,6 +48,7 @@ async def list_audit_logs(
         resource_type=query.resource_type,
         resource_id=query.resource_id,
         result=query.result,
+        search=query.search,
         page=query.page,
         page_size=query.page_size,
         sort_by=query.sort_by,

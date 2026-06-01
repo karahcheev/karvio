@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui/Button";
 import { AuditLogDetailsPanel } from "./components/AuditLogDetailsPanel";
 import { AuditLogsFilters } from "./components/AuditLogsFilters";
 import { AuditLogsTable } from "./components/AuditLogsTable";
-import { useAuditLogsPage } from "./hooks/use-audit-logs-page";
+import { AUDIT_PAGE_SIZE_OPTIONS, useAuditLogsPage } from "./hooks/use-audit-logs-page";
 
 export function AuditLogsModulePage() {
   const model = useAuditLogsPage();
@@ -19,10 +19,10 @@ export function AuditLogsModulePage() {
           <Button
             unstyled
             className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)]"
-            onClick={() => void model.actions.loadLogs("replace")}
-            disabled={model.state.isLoading}
+            onClick={model.actions.refresh}
+            disabled={model.state.isFetching}
           >
-            {model.state.isLoading ? "Refreshing..." : "Refresh"}
+            {model.state.isFetching ? "Refreshing..." : "Refresh"}
           </Button>
         }
         searchQuery={model.state.searchQuery}
@@ -55,10 +55,16 @@ export function AuditLogsModulePage() {
           columnsOpen={model.state.columnsOpen}
           selectedLogEventId={model.state.selectedLogEventId}
           sorting={model.state.sorting}
+          page={model.state.page}
+          pageSize={model.state.pageSize}
+          totalPages={model.state.totalPages}
+          pageSizeOptions={AUDIT_PAGE_SIZE_OPTIONS}
           onColumnsOpenChange={model.actions.setColumnsOpen}
           onSortingChange={model.actions.setSorting}
           onToggleColumn={model.actions.toggleColumn}
           onRowClick={(item) => model.actions.setSelectedLogEventId(item.event_id)}
+          onPageChange={model.actions.setPage}
+          onPageSizeChange={model.actions.setPageSize}
         />
       </EntityListPage>
 

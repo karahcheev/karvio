@@ -12,6 +12,7 @@ export type GetAuditLogsParams = {
   resource_type?: string;
   resource_id?: string;
   result?: AuditResult;
+  search?: string;
   page?: number;
   page_size?: number;
   sort_by?: AuditLogsSortBy;
@@ -29,6 +30,7 @@ export async function getAuditLogs(params?: GetAuditLogsParams): Promise<AuditLo
   if (params?.resource_type) query.set("resource_type", params.resource_type);
   if (params?.resource_id) query.set("resource_id", params.resource_id);
   if (params?.result) query.set("result", params.result);
+  if (params?.search) query.set("search", params.search);
   if (typeof params?.page === "number") query.set("page", String(params.page));
   if (typeof params?.page_size === "number") query.set("page_size", String(params.page_size));
   if (params?.sort_by) query.set("sort_by", params.sort_by);
