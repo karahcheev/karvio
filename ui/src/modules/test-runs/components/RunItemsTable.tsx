@@ -5,6 +5,7 @@ import { EntityTableWithStates } from "@/shared/ui/EntityTableWithStates";
 import { RowActionsMenu } from "@/shared/ui/RowActionsMenu";
 import { UnifiedTable, type UnifiedTableColumn, type UnifiedTableSorting } from "@/shared/ui/Table";
 import { StatusCell, TagsCell } from "@/shared/ui/table-cells";
+import { formatPriorityLabel, getPriorityTone } from "@/shared/domain/priority";
 import { getRunItemStatusTone, formatRunItemStatusLabel } from "../constants";
 
 export type RunOverviewRow = {
@@ -23,7 +24,7 @@ export type RunOverviewRow = {
   externalIssues: ExternalIssueLinkDto[];
 };
 
-export type RunItemColumn = "title" | "tags" | "suite" | "status" | "assignee" | "lastExecuted";
+export type RunItemColumn = "title" | "status" | "priority" | "assignee" | "tags" | "suite" | "lastExecuted";
 
 // Column definitions
 const runItemColumns: UnifiedTableColumn<RunOverviewRow, RunItemColumn>[] = [
@@ -37,6 +38,45 @@ const runItemColumns: UnifiedTableColumn<RunOverviewRow, RunItemColumn>[] = [
     minWidth: 260,
     nowrap: false,
     renderCell: (item) => <span className="text-sm text-[var(--foreground)]">{item.title}</span>,
+  },
+  {
+    id: "status",
+    label: "Status",
+    menuLabel: "Status",
+    sortable: true,
+    defaultSortDirection: "asc",
+    defaultWidth: 180,
+    minWidth: 150,
+    renderCell: (item) => (
+      <StatusCell tone={getRunItemStatusTone(item.status)} withBorder>
+        {formatRunItemStatusLabel(item.status)}
+      </StatusCell>
+    ),
+  },
+  {
+    id: "priority",
+    label: "Priority",
+    menuLabel: "Priority",
+    defaultWidth: 140,
+    minWidth: 110,
+    renderCell: (item) => (
+      <StatusCell tone={getPriorityTone(item.priority)}>{formatPriorityLabel(item.priority)}</StatusCell>
+    ),
+  },
+  {
+    id: "assignee",
+    label: "Assignee",
+    menuLabel: "Assignee",
+    sortable: true,
+    defaultSortDirection: "asc",
+    defaultWidth: 220,
+    minWidth: 170,
+    renderCell: (item) => (
+      <div className="flex items-center gap-2 text-sm text-[var(--foreground)]">
+        <User className="h-4 w-4 text-[var(--muted-foreground)]" />
+        {item.assignee}
+      </div>
+    ),
   },
   {
     id: "tags",
@@ -57,35 +97,6 @@ const runItemColumns: UnifiedTableColumn<RunOverviewRow, RunItemColumn>[] = [
     minWidth: 170,
     nowrap: false,
     renderCell: (item) => <span className="text-sm text-[var(--foreground)]">{item.suite}</span>,
-  },
-  {
-    id: "status",
-    label: "Status",
-    menuLabel: "Status",
-    sortable: true,
-    defaultSortDirection: "asc",
-    defaultWidth: 180,
-    minWidth: 150,
-    renderCell: (item) => (
-      <StatusCell tone={getRunItemStatusTone(item.status)} withBorder>
-        {formatRunItemStatusLabel(item.status)}
-      </StatusCell>
-    ),
-  },
-  {
-    id: "assignee",
-    label: "Assignee",
-    menuLabel: "Assignee",
-    sortable: true,
-    defaultSortDirection: "asc",
-    defaultWidth: 220,
-    minWidth: 170,
-    renderCell: (item) => (
-      <div className="flex items-center gap-2 text-sm text-[var(--foreground)]">
-        <User className="h-4 w-4 text-[var(--muted-foreground)]" />
-        {item.assignee}
-      </div>
-    ),
   },
   {
     id: "lastExecuted",

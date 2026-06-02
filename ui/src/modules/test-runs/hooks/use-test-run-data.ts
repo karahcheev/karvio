@@ -26,6 +26,7 @@ function mapRunCaseSorting(column: RunItemColumn): RunCasesSortBy | null {
       return "assignee_name";
     case "lastExecuted":
       return "last_executed_at";
+    case "priority":
     case "tags":
       return null;
   }
