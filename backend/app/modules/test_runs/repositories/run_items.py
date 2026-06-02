@@ -211,19 +211,39 @@ async def recalc_run_case_aggregate(db: AsyncSession, run_case_id: str) -> None:
     mapping = {status.value if hasattr(status, "value") else str(status): count for status, count in counts}
     total = sum(mapping.values())
     passed = mapping.get(RunItemStatus.passed.value, 0)
-    failed = (
-        mapping.get(RunItemStatus.error.value, 0)
-        + mapping.get(RunItemStatus.failure.value, 0)
-        + mapping.get(RunItemStatus.blocked.value, 0)
-    )
+    failure = mapping.get(RunItemStatus.failure.value, 0)
+    error = mapping.get(RunItemStatus.error.value, 0)
+    blocked = mapping.get(RunItemStatus.blocked.value, 0)
+    xpassed = mapping.get(RunItemStatus.xpassed.value, 0)
+    xfailed = mapping.get(RunItemStatus.xfailed.value, 0)
+    skipped = mapping.get(RunItemStatus.skipped.value, 0)
+    in_progress = mapping.get(RunItemStatus.in_progress.value, 0)
+    untested = mapping.get(RunItemStatus.untested.value, 0)
     run_case.rows_total = total
     run_case.rows_passed = passed
-    run_case.rows_failed = failed
-    if failed > 0:
+    run_case.rows_failed = failure + error + blocked
+    # Roll rows up to a single case status. Highest-severity terminal status wins;
+    # any still-pending row (in_progress/untested) keeps the case from settling on a
+    # passing-side status. Covers every RunItemStatus so manual updates aren't lost.
+    if total == 0:
+        run_case.status = RunItemStatus.untested
+    elif failure > 0:
         run_case.status = RunItemStatus.failure
-    elif total > 0 and passed == total:
-        run_case.status = RunItemStatus.passed
-    elif mapping.get(RunItemStatus.in_progress.value, 0) > 0:
+    elif error > 0:
+        run_case.status = RunItemStatus.error
+    elif blocked > 0:
+        run_case.status = RunItemStatus.blocked
+    elif xpassed > 0:
+        run_case.status = RunItemStatus.xpassed
+    elif in_progress > 0:
         run_case.status = RunItemStatus.in_progress
+    elif untested > 0:
+        run_case.status = RunItemStatus.untested
+    elif passed > 0:
+        run_case.status = RunItemStatus.passed
+    elif xfailed > 0:
+        run_case.status = RunItemStatus.xfailed
+    elif skipped > 0:
+        run_case.status = RunItemStatus.skipped
     else:
         run_case.status = RunItemStatus.untested
