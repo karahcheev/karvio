@@ -83,7 +83,11 @@ def _used_variables_from_created_steps(created_steps: list[tuple[TestCaseStep, s
 async def get_steps(db: AsyncSession, *, test_case_id: str, current_user: User) -> TestStepsResponse:
     test_case = await get_test_case_or_404(db, test_case_id)
     await ensure_project_role(db, current_user, test_case.project_id, ProjectMemberRole.viewer)
-    _ensure_steps_template(test_case.id, test_case.template_type)
+    # Reading steps for a non-'steps' template (text/automated) is not an error: such a
+    # case simply has no structured steps. Return an empty list so callers (e.g. run item
+    # details) can load uniformly without special-casing the template type.
+    if test_case.template_type != TestCaseTemplateType.steps:
+        return TestStepsResponse(test_case_id=test_case_id, steps=[], step_attachments={})
     steps = await step_repo.list_by_test_case(db, test_case_id)
     step_ids = [s.id for s in steps]
     step_attachments = await _load_step_attachments(db, step_ids)
