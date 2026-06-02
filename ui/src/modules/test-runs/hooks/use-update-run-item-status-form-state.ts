@@ -67,7 +67,6 @@ export const STATUS_OPTIONS: StatusOption[] = [
     icon: AlertTriangle,
     color: "text-[var(--status-error)]",
     bgColor: "bg-[var(--tone-error-bg-soft)] hover:bg-[var(--tone-error-bg)]",
-    requiresComment: true,
   },
   {
     value: "failure",
@@ -75,7 +74,6 @@ export const STATUS_OPTIONS: StatusOption[] = [
     icon: XCircle,
     color: "text-[var(--status-failure)]",
     bgColor: "bg-[var(--tone-danger-bg)] hover:bg-[var(--tone-danger-bg)]",
-    requiresComment: true,
   },
   {
     value: "blocked",
@@ -83,7 +81,6 @@ export const STATUS_OPTIONS: StatusOption[] = [
     icon: Ban,
     color: "text-[var(--status-blocked)]",
     bgColor: "bg-[var(--tone-warning-bg)] hover:bg-[var(--tone-warning-bg)]",
-    requiresComment: true,
   },
   {
     value: "skipped",
@@ -105,7 +102,6 @@ export const STATUS_OPTIONS: StatusOption[] = [
     icon: CircleAlert,
     color: "text-[var(--status-failure)]",
     bgColor: "bg-[var(--tone-danger-bg)] hover:bg-[var(--tone-danger-bg)]",
-    requiresComment: true,
   },
 ];
 
@@ -152,7 +148,11 @@ export function useUpdateRunItemStatusFormState({
   const isFailureStatus = selectedStatus === "failure";
   const isErrorStatus = selectedStatus === "error";
   const showDefectField =
-    isErrorStatus || isFailureStatus || selectedStatus === "blocked" || selectedStatus === "xpassed";
+    isErrorStatus ||
+    isFailureStatus ||
+    selectedStatus === "blocked" ||
+    selectedStatus === "xpassed" ||
+    selectedStatus === "xfailed";
   const hasStepOptions = Boolean(testSteps && testSteps.length > 0);
   const requiresFailedStep = isFailureStatus && hasStepOptions;
   const requiresActualResult = isFailureStatus;
