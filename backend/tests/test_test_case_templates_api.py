@@ -153,3 +153,34 @@ async def test_structured_steps_endpoint_rejects_non_steps_template(
     )
     assert response.status_code == 409
     assert response.json()["code"] == "invalid_template_operation"
+
+
+async def test_get_structured_steps_returns_empty_for_non_steps_template(
+    client,
+    db_session: AsyncSession,
+    auth_user: User,
+    auth_headers,
+):
+    """GET steps for a text/automated case is not an error — it returns no structured steps."""
+    project = Project(id="proj_steps_get_empty_1", name="Proj")
+    membership = ProjectMember(project_id=project.id, user_id=auth_user.id, role=ProjectMemberRole.viewer)
+    test_case = TestCase(
+        id="tc_steps_get_empty_1",
+        project_id=project.id,
+        key="TPL-TC-2",
+        title="Text case",
+        template_type=TestCaseTemplateType.text,
+        template_payload={"steps_text": "Do something", "expected": "Works"},
+        tags=[],
+    )
+    db_session.add_all([project, membership, test_case])
+    await db_session.commit()
+
+    response = await client.get(
+        f"/api/v1/test-cases/{test_case.id}/steps",
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["test_case_id"] == test_case.id
+    assert body["steps"] == []
