@@ -28,10 +28,11 @@ import type { StatusUpdatePayload } from "./use-update-run-item-status-form-stat
 // Default visible columns for run items table
 const DEFAULT_VISIBLE_RUN_ITEM_COLUMNS: RunItemColumn[] = [
   "title",
+  "status",
+  "priority",
+  "assignee",
   "tags",
   "suite",
-  "status",
-  "assignee",
   "lastExecuted",
 ];
 
@@ -61,7 +62,7 @@ export function useTestRunOverviewPage() {
 
   // Table UI: columns, filters, selection, dialogs
   const { isOpen: columnsOpen, setIsOpen: setColumnsOpen } = useDisclosure(false);
-  const { visibleColumns, toggleColumn } = useColumnVisibility<RunItemColumn>(DEFAULT_VISIBLE_RUN_ITEM_COLUMNS, "test-run-items");
+  const { visibleColumns, toggleColumn } = useColumnVisibility<RunItemColumn>(DEFAULT_VISIBLE_RUN_ITEM_COLUMNS, "test-run-items-v2");
   const [sorting, setSorting] = useState<UnifiedTableSorting<RunItemColumn>>({
     column: "lastExecuted",
     direction: "desc",
