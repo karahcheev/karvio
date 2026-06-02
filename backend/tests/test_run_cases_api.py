@@ -108,6 +108,26 @@ async def test_run_cases_crud_flow(client, db_session: AsyncSession, auth_header
     assert seeded_run_case.rows_failed == 1
 
 
+async def test_run_case_row_status_rolls_up_terminal_statuses(
+    client, db_session: AsyncSession, auth_headers, seeded_run_case: RunItem
+):
+    """Manually setting a row to xfailed/xpassed/skipped must roll up to the case (not revert to untested)."""
+    rows_resp = await client.get(f"/api/v1/run-cases/{seeded_run_case.id}/rows", headers=auth_headers)
+    run_row_id = rows_resp.json()["items"][0]["id"]
+
+    for status in ("xfailed", "xpassed", "skipped", "blocked", "error"):
+        patch_response = await client.patch(
+            f"/api/v1/run-cases/rows/{run_row_id}",
+            json={"status": status},
+            headers=auth_headers,
+        )
+        assert patch_response.status_code == 200
+        assert patch_response.json()["status"] == status
+
+        await db_session.refresh(seeded_run_case)
+        assert seeded_run_case.status.value == status
+
+
 async def test_run_case_history_embedded_in_get(client, db_session: AsyncSession, auth_headers, seeded_run_case: RunItem):
     """GET /run-cases/{id} returns run case with embedded history."""
     rows_resp = await client.get(f"/api/v1/run-cases/{seeded_run_case.id}/rows", headers=auth_headers)
